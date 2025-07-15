@@ -17,42 +17,73 @@ class MindfulnessAlerts {
     }
 
     async init() {
+        console.log('🚀 Iniciando MindfulnessAlerts...');
+        
         this.setupEventListeners();
         this.updateUI();
         this.updateStats();
         this.checkBrowserSupport();
         
         // Inicializar OneSignal
+        console.log('🔄 Iniciando inicialización OneSignal...');
         await this.initializeOneSignal();
         
         // Restore session if was active
         if (this.config.wasActive) {
+            console.log('🔄 Restaurando sesión activa...');
             this.startAlerts();
         }
+        
+        console.log('✅ MindfulnessAlerts inicializado completamente');
     }
 
     async initializeOneSignal() {
         try {
-            // Inicializar OneSignal Manager
-            this.oneSignalManager = new OneSignalManager();
+            console.log('🔄 Configurando integración OneSignal...');
             
-            // Esperar a que se inicialice
-            await new Promise(resolve => {
-                const checkInit = () => {
-                    if (this.oneSignalManager.isInitialized) {
-                        resolve();
-                    } else {
-                        setTimeout(checkInit, 100);
-                    }
-                };
-                checkInit();
-            });
+            // Esperar a que OneSignal esté disponible
+            await this.waitForOneSignal();
             
-            console.log('OneSignal integration ready');
+            this.oneSignalManager = window.oneSignalManager;
+            console.log('✅ OneSignal integration ready');
+            
+            // Disparar evento para indicar que OneSignal está listo
+            window.dispatchEvent(new CustomEvent('oneSignalReady', {
+                detail: { manager: this.oneSignalManager }
+            }));
             
         } catch (error) {
-            console.error('Error initializing OneSignal:', error);
+            console.error('❌ Error initializing OneSignal:', error);
+            this.oneSignalManager = null;
+            
+            // Disparar evento de error
+            window.dispatchEvent(new CustomEvent('oneSignalError', {
+                detail: { error: error.message }
+            }));
         }
+    }
+    
+    async waitForOneSignal() {
+        return new Promise((resolve, reject) => {
+            const timeout = setTimeout(() => {
+                reject(new Error('OneSignal timeout después de 15 segundos'));
+            }, 15000);
+            
+            const checkOneSignal = () => {
+                if (window.oneSignalManager && window.oneSignalManager.isInitialized) {
+                    clearTimeout(timeout);
+                    console.log('✅ OneSignal encontrado y inicializado');
+                    resolve();
+                } else {
+                    // Log para debug
+                    const mgr = window.oneSignalManager;
+                    console.log(`🔄 Esperando OneSignal... Manager: ${!!mgr}, Inicializado: ${mgr?.isInitialized}`);
+                    setTimeout(checkOneSignal, 200);
+                }
+            };
+            
+            checkOneSignal();
+        });
     }
 
     setupEventListeners() {
@@ -94,18 +125,43 @@ class MindfulnessAlerts {
         });
 
         document.getElementById('push-notifications-enabled').addEventListener('change', async (e) => {
-            if (e.target.checked) {
+            const checkbox = e.target;
+            const statusElement = document.getElementById('push-status');
+            
+            if (checkbox.checked) {
+                // Deshabilitar checkbox temporalmente
+                checkbox.disabled = true;
+                
                 // Solicitar permisos de notificación push
                 const granted = await this.requestPushNotifications();
-                if (!granted) {
-                    e.target.checked = false;
-                    this.showToast('No se pudieron habilitar las notificaciones push', 'error');
+                
+                if (granted) {
+                    // Mostrar estado exitoso
+                    if (statusElement) {
+                        statusElement.style.display = 'block';
+                        statusElement.innerHTML = '<span class="badge bg-success"><i class="fas fa-check me-1"></i>Notificaciones habilitadas</span>';
+                    }
+                } else {
+                    // Revertir checkbox si falló
+                    checkbox.checked = false;
+                    if (statusElement) {
+                        statusElement.style.display = 'none';
+                    }
                 }
+                
+                // Rehabilitar checkbox
+                checkbox.disabled = false;
+                
             } else {
                 // Desactivar notificaciones push
                 await this.disablePushNotifications();
+                if (statusElement) {
+                    statusElement.style.display = 'none';
+                }
             }
-            this.config.pushNotificationsEnabled = e.target.checked;
+            
+            this.config.pushNotificationsEnabled = checkbox.checked;
+            this.saveConfig();
         });
 
         document.getElementById('auto-stop-enabled').addEventListener('change', (e) => {
@@ -136,6 +192,18 @@ class MindfulnessAlerts {
             this.config.wasActive = this.isActive;
             this.saveConfig();
         });
+        
+        // OneSignal event listeners
+        window.addEventListener('oneSignalReady', (event) => {
+            console.log('🎉 OneSignal listo - actualizando UI');
+            this.oneSignalManager = event.detail.manager;
+            this.updateOneSignalUI();
+        });
+        
+        window.addEventListener('oneSignalError', (event) => {
+            console.error('❌ Error OneSignal:', event.detail.error);
+            this.showToast('Error en OneSignal: ' + event.detail.error, 'error');
+        });
     }
 
     toggleAlerts() {
@@ -156,7 +224,7 @@ class MindfulnessAlerts {
         this.sessionStartTime = Date.now();
         
         // Si las notificaciones push están habilitadas, programar en OneSignal
-        if (this.config.pushNotificationsEnabled && this.oneSignalManager?.isSubscribed) {
+        if (this.config.pushNotificationsEnabled && this.oneSignalManager && window.OneSignal && window.OneSignal.User.PushSubscription.optedIn) {
             await this.scheduleServerSideAlerts();
         }
         
@@ -176,7 +244,7 @@ class MindfulnessAlerts {
         }
         
         // Cancelar alertas programadas en el servidor
-        if (this.config.pushNotificationsEnabled && this.oneSignalManager?.isSubscribed) {
+        if (this.config.pushNotificationsEnabled && this.oneSignalManager && window.OneSignal && window.OneSignal.User.PushSubscription.optedIn) {
             await this.cancelServerSideAlerts();
         }
         
@@ -210,7 +278,7 @@ class MindfulnessAlerts {
         }
         
         // Show push notification si está habilitado, sino notificación web normal
-        if (this.config.pushNotificationsEnabled && this.oneSignalManager?.isSubscribed) {
+        if (this.config.pushNotificationsEnabled && this.oneSignalManager && window.OneSignal && window.OneSignal.User.PushSubscription.optedIn) {
             this.sendPushNotification();
         } else {
             this.showNotification();
@@ -268,12 +336,14 @@ class MindfulnessAlerts {
         }, 500);
     }
 
-    showNotification() {
+    showNotification(customMessage = null) {
         if ('Notification' in window && Notification.permission === 'granted') {
+            const message = customMessage || 'Toma un momento para respirar conscientemente';
+            
             const notification = new Notification('Momento de Mindfulness', {
-                body: 'Toma un momento para respirar conscientemente',
-                icon: '../assets/img/logopeque.png',
-                badge: '../assets/img/logopeque.png',
+                body: message,
+                icon: '/assets/icons/192x192.png',
+                badge: '/assets/icons/192x192.png',
                 tag: 'mindfulness-alert',
                 requireInteraction: false,
                 silent: false
@@ -366,6 +436,34 @@ class MindfulnessAlerts {
         }
 
         this.updateNextAlertTime();
+        
+        // Inicializar estado OneSignal
+        this.initializeOneSignalUI();
+    }
+    
+    initializeOneSignalUI() {
+        const pushCheckbox = document.getElementById('push-notifications-enabled');
+        const pushStatus = document.getElementById('push-status');
+        
+        if (pushCheckbox) {
+            // Deshabilitar hasta que OneSignal esté listo
+            pushCheckbox.disabled = !this.oneSignalManager;
+            
+            // Si OneSignal está listo, actualizar estado
+            if (this.oneSignalManager && window.OneSignal) {
+                try {
+                    const optedIn = window.OneSignal.User.PushSubscription.optedIn;
+                    pushCheckbox.checked = optedIn;
+                    
+                    if (pushStatus && optedIn) {
+                        pushStatus.style.display = 'block';
+                        pushStatus.innerHTML = '<span class="badge bg-success"><i class="fas fa-check me-1"></i>Notificaciones habilitadas</span>';
+                    }
+                } catch (error) {
+                    console.error('Error inicializando UI OneSignal:', error);
+                }
+            }
+        }
     }
 
     updateNextAlertTime() {
@@ -576,36 +674,80 @@ class MindfulnessAlerts {
 
     // OneSignal Push Notification Methods
     async requestPushNotifications() {
+        // Verificar si OneSignal está disponible o intentar esperarlo
         if (!this.oneSignalManager) {
-            this.showToast('OneSignal no está disponible', 'error');
-            return false;
+            this.showToast('Inicializando OneSignal, por favor espera...', 'info');
+            
+            try {
+                // Intentar esperar a que OneSignal se inicialice
+                await new Promise((resolve, reject) => {
+                    const timeout = setTimeout(() => {
+                        reject(new Error('Timeout esperando OneSignal'));
+                    }, 5000);
+                    
+                    const checkReady = () => {
+                        if (this.oneSignalManager && window.oneSignalManager && window.oneSignalManager.isInitialized) {
+                            clearTimeout(timeout);
+                            this.oneSignalManager = window.oneSignalManager;
+                            resolve();
+                        } else {
+                            setTimeout(checkReady, 200);
+                        }
+                    };
+                    
+                    // También escuchar el evento
+                    window.addEventListener('oneSignalReady', () => {
+                        clearTimeout(timeout);
+                        this.oneSignalManager = window.oneSignalManager;
+                        resolve();
+                    }, { once: true });
+                    
+                    checkReady();
+                });
+                
+            } catch (waitError) {
+                this.showToast('OneSignal no está disponible. Intenta recargar la página.', 'error');
+                return false;
+            }
         }
 
         try {
-            const granted = await this.oneSignalManager.requestPermission();
-            if (granted) {
+            // Usar el nuevo método de suscripción
+            const subscriptionId = await this.oneSignalManager.subscribe();
+            
+            if (subscriptionId || window.OneSignal.User.PushSubscription.optedIn) {
                 this.showToast('¡Notificaciones push habilitadas! Ahora recibirás alertas aunque el teléfono esté inactivo', 'success');
                 return true;
             } else {
-                this.showToast('Permisos de notificación denegados', 'error');
+                this.showToast('No se pudo completar la suscripción', 'error');
                 return false;
             }
         } catch (error) {
             console.error('Error requesting push notifications:', error);
-            this.showToast('Error al solicitar notificaciones push', 'error');
+            this.showToast('Error al solicitar notificaciones push: ' + error.message, 'error');
             return false;
         }
     }
 
     async disablePushNotifications() {
         if (this.oneSignalManager) {
-            await this.oneSignalManager.unsubscribe();
-            this.showToast('Notificaciones push deshabilitadas', 'info');
+            try {
+                await this.oneSignalManager.unsubscribe();
+                this.showToast('Notificaciones push deshabilitadas', 'info');
+            } catch (error) {
+                console.error('Error disabling push notifications:', error);
+                this.showToast('Error deshabilitando notificaciones', 'error');
+            }
         }
     }
 
     async sendPushNotification() {
-        if (!this.oneSignalManager?.isSubscribed) {
+        // Verificar si OneSignal está disponible y el usuario está suscrito
+        const canSendPush = this.oneSignalManager && 
+                           window.OneSignal && 
+                           window.OneSignal.User.PushSubscription.optedIn;
+
+        if (!canSendPush) {
             // Fallback a notificación web normal
             this.showNotification();
             return;
@@ -613,7 +755,7 @@ class MindfulnessAlerts {
 
         const messages = [
             "🧘‍♀️ Momento de respirar conscientemente",
-            "🌸 Pausa y observa el momento presente",
+            "🌸 Pausa y observa el momento presente", 
             "🍃 Toma tres respiraciones profundas",
             "💫 Conecta contigo mismo/a",
             "🌊 Fluye con la tranquilidad del ahora",
@@ -625,25 +767,30 @@ class MindfulnessAlerts {
         const randomMessage = messages[Math.floor(Math.random() * messages.length)];
         
         try {
-            await this.oneSignalManager.sendMindfulnessAlert(randomMessage);
+            // Enviar notificación local (no se pueden enviar push desde frontend)
+            this.showNotification(randomMessage);
+            
+            // Log para debug
+            console.log(`📱 Notificación enviada: ${randomMessage}`);
+            
         } catch (error) {
-            console.error('Error sending push notification:', error);
+            console.error('Error sending notification:', error);
             // Fallback a notificación web
             this.showNotification();
         }
     }
 
     async scheduleServerSideAlerts() {
-        if (!this.oneSignalManager?.isSubscribed) return;
+        if (!this.oneSignalManager || !window.OneSignal || !window.OneSignal.User.PushSubscription.optedIn) return;
 
         try {
             const intervalMinutes = this.config.intervalSeconds / 60;
             const totalDuration = this.config.autoStopEnabled ? 
                 this.config.autoStopDuration : 480; // 8 horas por defecto
 
-            await this.oneSignalManager.schedulePeriodicAlerts(intervalMinutes, totalDuration);
-            
-            this.showToast('Alertas programadas en el servidor para funcionar en segundo plano', 'success');
+            // Por ahora solo log - las notificaciones push reales requieren servidor
+            console.log(`📅 Programando alertas cada ${intervalMinutes} minutos por ${totalDuration} minutos`);
+            this.showToast('OneSignal configurado - las alertas locales funcionan normalmente', 'info');
             
         } catch (error) {
             console.error('Error scheduling server-side alerts:', error);
@@ -652,13 +799,39 @@ class MindfulnessAlerts {
     }
 
     async cancelServerSideAlerts() {
-        if (!this.oneSignalManager?.isSubscribed) return;
+        if (!this.oneSignalManager || !window.OneSignal || !window.OneSignal.User.PushSubscription.optedIn) return;
 
         try {
-            await this.oneSignalManager.cancelScheduledAlerts();
-            console.log('Server-side alerts cancelled');
+            // Por ahora solo log - la cancelación real requiere servidor
+            console.log('📅 Cancelando alertas programadas en servidor');
         } catch (error) {
             console.error('Error cancelling server-side alerts:', error);
+        }
+    }
+
+    updateOneSignalUI() {
+        const pushCheckbox = document.getElementById('push-notifications-enabled');
+        const pushStatus = document.getElementById('push-status');
+        
+        if (this.oneSignalManager && window.OneSignal) {
+            try {
+                const optedIn = window.OneSignal.User.PushSubscription.optedIn;
+                
+                if (pushCheckbox) {
+                    pushCheckbox.disabled = false;
+                    pushCheckbox.checked = optedIn;
+                }
+                
+                if (pushStatus && optedIn) {
+                    pushStatus.style.display = 'block';
+                    pushStatus.innerHTML = '<span class="badge bg-success"><i class="fas fa-check me-1"></i>Notificaciones habilitadas</span>';
+                }
+                
+                console.log('✅ UI de OneSignal actualizada');
+                
+            } catch (error) {
+                console.error('Error actualizando UI OneSignal:', error);
+            }
         }
     }
 }

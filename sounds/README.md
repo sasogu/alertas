@@ -6,8 +6,8 @@ Esta carpeta debe contener los archivos de audio para las alertas:
 - `bell1.mp3` - Campana Tibetana
 - `bell2.mp3` - Gong Suave  
 - `bell3.mp3` - Cuenco Cantante
-- `chime.mp3` - Carillón
-- `om.mp3` - Om Mantra
+- `bell4.mp3` - Carillón
+- `bell5.mp3` - Om Mantra
 
 ## Recomendaciones:
 - Duración: 2-5 segundos

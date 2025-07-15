@@ -3,9 +3,9 @@
  * Gestiona cache, funcionalidad offline y actualización de la app
  */
 
-const CACHE_NAME = 'caminomedio-alertas-v1.0.0';
-const STATIC_CACHE = 'static-v1.0.0';
-const DYNAMIC_CACHE = 'dynamic-v1.0.0';
+const CACHE_NAME = 'caminomedio-alertas-v1.2.0';
+const STATIC_CACHE = 'static-v1.2.0';
+const DYNAMIC_CACHE = 'dynamic-v1.2.0';
 
 // Archivos críticos para cachear
 const STATIC_ASSETS = [
@@ -28,8 +28,8 @@ const STATIC_ASSETS = [
     '/sounds/bell1.mp3',
     '/sounds/bell2.mp3',
     '/sounds/bell3.mp3',
-    '/sounds/chime.mp3',
-    '/sounds/om.mp3',
+    '/sounds/bell4.mp3',
+    '/sounds/bell5.mp3',
     // CDN críticos
     'https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css',
     'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css'
@@ -44,7 +44,7 @@ const NO_CACHE_URLS = [
 
 // Instalación del Service Worker
 self.addEventListener('install', event => {
-    console.log('🔧 Service Worker: Instalando...');
+    console.log('🔧 Service Worker: Instalando versión', CACHE_NAME);
     
     event.waitUntil(
         caches.open(STATIC_CACHE)
@@ -54,8 +54,13 @@ self.addEventListener('install', event => {
             })
             .then(() => {
                 console.log('✅ Service Worker: Instalación completada');
-                // Forzar activación inmediata
-                return self.skipWaiting();
+                // Solo skipWaiting si es la primera instalación
+                if (!self.registration.active) {
+                    console.log('🚀 Service Worker: Primera instalación, activando inmediatamente');
+                    return self.skipWaiting();
+                } else {
+                    console.log('⏳ Service Worker: Esperando activación manual para actualización');
+                }
             })
             .catch(error => {
                 console.error('❌ Service Worker: Error en instalación:', error);
@@ -186,7 +191,10 @@ async function updateCache(request, response) {
 
 // Mensaje de comunicación con la aplicación principal
 self.addEventListener('message', event => {
+    console.log('📨 Service Worker: Mensaje recibido:', event.data);
+    
     if (event.data && event.data.type === 'SKIP_WAITING') {
+        console.log('⏭️ Service Worker: Ejecutando skipWaiting()...');
         self.skipWaiting();
     }
     

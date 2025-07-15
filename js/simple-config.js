@@ -5,9 +5,9 @@
 
 // Configuración directa para pruebas inmediatas
 window.ONESIGNAL_CONFIG = {
-    // NUEVA APP REQUERIDA PARA caminomedio.org (sin www)
-    APP_ID: 'NUEVA_APP_ID_AQUI', // ⚠️ Crear nueva app para caminomedio.org
-    SAFARI_WEB_ID: 'NUEVO_SAFARI_WEB_ID_AQUI' // ⚠️ Safari Web ID de nueva app
+    // Usar las mismas credenciales válidas
+    APP_ID: '75f7bf03-ba86-4059-99cc-797fe53a147d',
+    SAFARI_WEB_ID: 'web.onesignal.auto.3f550615-46c0-4fa5-9ee8-42953ece3d19'
 };
 
 console.log('🎯 Configuración OneSignal cargada directamente');

@@ -7,17 +7,19 @@
     "start": "node config-server.js",
     "dev": "nodemon config-server.js",
     "serve": "python3 -m http.server 8081",
-    "serve-https": "python3 -m http.server 8443 --bind 0.0.0.0",
+    "serve-https": "npx http-server -S -p 8443 -a localhost",
+    "serve-https-open": "npx http-server -S -p 8443 -a localhost -o",
     "test": "echo \"No tests specified\" && exit 0",
     "build": "echo \"Static site - no build needed\" && exit 0",
     "deploy": "echo \"Configure your deployment settings\" && exit 1"
   },
   "dependencies": {
-    "express": "^4.18.2",
     "cors": "^2.8.5",
-    "dotenv": "^16.3.1"
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2"
   },
   "devDependencies": {
+    "http-server": "^14.1.1",
     "nodemon": "^3.0.1"
   },
   "keywords": [
