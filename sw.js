@@ -4,9 +4,9 @@
  * Compatible con OneSignal - Evita conflictos de construcción
  */
 
-const CACHE_NAME = 'caminomedio-alertas-v1.2.6';
-const STATIC_CACHE = 'static-v1.2.6';
-const DYNAMIC_CACHE = 'dynamic-v1.2.6';
+const CACHE_NAME = 'caminomedio-alertas-v1.2.7';
+const STATIC_CACHE = 'static-v1.2.7';
+const DYNAMIC_CACHE = 'dynamic-v1.2.7';
 
 // Archivos críticos para cachear
 const STATIC_ASSETS = [

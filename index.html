@@ -130,6 +130,13 @@
                                         </button>
                                     </div>
                                 </div>
+                                <div class="mt-2">
+                                    <small class="text-muted">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        <strong>En móviles:</strong> El sonido puede no reproducirse si la pantalla está apagada. 
+                                        Activa también las notificaciones push y vibración para mayor fiabilidad.
+                                    </small>
+                                </div>
                             </div>
 
                             <!-- Volume Control -->
@@ -150,6 +157,15 @@
                                     <label class="form-check-label" for="vibration-enabled">
                                         <i class="fas fa-mobile-alt me-2"></i>Activar vibración (móviles)
                                     </label>
+                                </div>
+                                <div class="mt-2">
+                                    <button type="button" class="btn btn-outline-light btn-sm" id="test-vibration">
+                                        <i class="fas fa-mobile-alt me-1"></i>Probar Vibración
+                                    </button>
+                                    <small class="text-muted ms-2">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Solo funciona en móviles Android
+                                    </small>
                                 </div>
                             </div>
 
@@ -172,6 +188,34 @@
                                     <span class="badge bg-success">
                                         <i class="fas fa-check me-1"></i>Notificaciones habilitadas
                                     </span>
+                                </div>
+                                
+                                <!-- Push Backup Interval Settings -->
+                                <div class="mt-3">
+                                    <label for="push-backup-interval" class="form-label small">
+                                        <i class="fas fa-clock me-1"></i>Verificar inactividad cada:
+                                    </label>
+                                    <div class="row g-2">
+                                        <div class="col-md-8">
+                                            <select class="form-select form-select-sm" id="push-backup-interval">
+                                                <option value="2">2 minutos</option>
+                                                <option value="5">5 minutos</option>
+                                                <option value="10" selected>10 minutos</option>
+                                                <option value="15">15 minutos</option>
+                                                <option value="30">30 minutos</option>
+                                                <option value="60">1 hora</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <button type="button" class="btn btn-outline-info btn-sm w-100" id="test-push-backup">
+                                                <i class="fas fa-paper-plane me-1"></i>Probar
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <small class="text-muted">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Tiempo para verificar si enviar notificación push cuando la app esté inactiva
+                                    </small>
                                 </div>
                             </div>
 
@@ -281,7 +325,8 @@
         </footer>
 
         <!-- Audio Elements -->
-        <audio id="alert-audio" preload="auto">
+        <audio id="alert-audio" preload="auto" controls style="display: none;" 
+               webkit-playsinline playsinline>
             <source id="audio-source" src="sounds/bell1.mp3" type="audio/mpeg">
         </audio>
 
@@ -321,59 +366,75 @@
                 }
 
                 async _doInitialize() {
-                    return new Promise((resolve, reject) => {
-                        try {
-                            this.log('🚀 Iniciando configuración oficial OneSignal...');
-                            
-                            // Verificar protocolo HTTPS
-                            if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
-                                throw new Error('OneSignal requiere HTTPS');
-                            }
-
-                            // Obtener configuración
-                            const config = this.getConfig();
-                            this.log('🔧 Configuración:');
-                            this.log(JSON.stringify(config, null, 2));
-
-                            // Configurar OneSignalDeferred antes de cargar el script
-                            window.OneSignalDeferred = window.OneSignalDeferred || [];
-                            
-                            window.OneSignalDeferred.push((OneSignal) => {
-                                this.log('📦 OneSignal SDK cargado via deferred');
-                                
-                                OneSignal.init(config).then(() => {
-                                    this.log('✅ OneSignal inicializado correctamente');
-                                    this.isInitialized = true;
-                                    this.setupEventHandlers(OneSignal);
-                                    
-                                    // Verificar estado inicial
-                                    this.checkInitialState(OneSignal);
-                                    
-                                    resolve(OneSignal);
-                                    
-                                }).catch(error => {
-                                    this.log(`💥 Error en inicialización: ${error.message}`, 'error');
-                                    reject(error);
-                                });
-                            });
-
-                            // Cargar el script oficial si no está ya cargado
-                            if (!document.querySelector('script[src*="OneSignalSDK.page.js"]')) {
-                                this.loadOfficialScript();
-                            }
-                            
-                            // Timeout de seguridad
-                            setTimeout(() => {
-                                if (!this.isInitialized) {
-                                    reject(new Error('Timeout: OneSignal no se inicializó en 15 segundos'));
-                                }
-                            }, 15000);
-
-                        } catch (error) {
-                            this.log(`💥 Error en configuración: ${error.message}`, 'error');
-                            reject(error);
+                    try {
+                        this.log('🚀 Iniciando configuración oficial OneSignal...');
+                        
+                        // Verificar protocolo HTTPS
+                        if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
+                            throw new Error('OneSignal requiere HTTPS');
                         }
-                    });
+
+                        // Obtener configuración
+                        const config = this.getConfig();
+                        this.log('🔧 Configuración:');
+                        this.log(JSON.stringify(config, null, 2));
+
+                        // Configurar OneSignalDeferred antes de cargar el script
+                        window.OneSignalDeferred = window.OneSignalDeferred || [];
+                        
+                        // Cargar el script oficial y esperar a que esté disponible
+                        await this.loadOfficialScript();
+                        
+                        // Verificar que OneSignal esté realmente disponible
+                        if (!window.OneSignal) {
+                            throw new Error('OneSignal SDK no está disponible después de cargar el script');
+                        }
+                        
+                        this.log('✅ OneSignal SDK verificado y disponible');
+                        
+                        // Intentar inicialización directa primero
+                        try {
+                            await window.OneSignal.init(config);
+                            this.log('✅ OneSignal inicializado directamente');
+                            this.isInitialized = true;
+                            this.setupEventHandlers(window.OneSignal);
+                            this.checkInitialState(window.OneSignal);
+                            return window.OneSignal;
+                            
+                        } catch (directError) {
+                            this.log(`⚠️ Inicialización directa falló, intentando con deferred: ${directError.message}`);
+                            
+                            // Fallback a método deferred
+                            return new Promise((resolve, reject) => {
+                                window.OneSignalDeferred.push((OneSignal) => {
+                                    this.log('📦 OneSignal SDK cargado via deferred');
+                                    
+                                    OneSignal.init(config).then(() => {
+                                        this.log('✅ OneSignal inicializado correctamente via deferred');
+                                        this.isInitialized = true;
+                                        this.setupEventHandlers(OneSignal);
+                                        this.checkInitialState(OneSignal);
+                                        resolve(OneSignal);
+                                        
+                                    }).catch(error => {
+                                        this.log(`💥 Error en inicialización deferred: ${error.message}`, 'error');
+                                        reject(error);
+                                    });
+                                });
+                                
+                                // Timeout de seguridad
+                                setTimeout(() => {
+                                    if (!this.isInitialized) {
+                                        reject(new Error('Timeout: OneSignal no se inicializó en 15 segundos'));
+                                    }
+                                }, 15000);
+                            });
+                        }
+
+                    } catch (error) {
+                        this.log(`💥 Error en configuración: ${error.message}`, 'error');
+                        throw error;
+                    }
                 }
 
                 getConfig() {
@@ -410,24 +471,59 @@
                 loadOfficialScript() {
                     this.log('📡 Cargando script oficial OneSignal...');
                     
-                    // Script oficial de OneSignal (versión página)
-                    (function(l, e, a, r, n, i, ng, g) {
-                        if (!l[n]) {
-                            function d(o) {
-                                return o.getElementsByTagName(r)[0];
-                            }
-                            var f = e.createElement(r);
-                            f.async = 1;
-                            f.src = a;
-                            f.onload = function() {
-                                console.log('[OneSignal] Script oficial cargado completamente');
-                            };
-                            f.onerror = function() {
-                                console.error('[OneSignal] Error cargando script oficial');
-                            };
-                            d(e).parentNode.insertBefore(f, d(e));
+                    return new Promise((resolve, reject) => {
+                        // Verificar si ya existe y está funcional
+                        const existingScript = document.querySelector('script[src*="OneSignalSDK.page.js"]');
+                        if (existingScript && window.OneSignal) {
+                            this.log('✅ Script OneSignal ya cargado y funcional');
+                            resolve();
+                            return;
                         }
-                    })(window, document, "https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js", "script", "OneSignal");
+                        
+                        // Si existe el script pero no OneSignal, removerlo
+                        if (existingScript && !window.OneSignal) {
+                            this.log('🔄 Removiendo script no funcional...');
+                            existingScript.remove();
+                        }
+                        
+                        // Script oficial de OneSignal (versión página)
+                        const script = document.createElement('script');
+                        script.async = true;
+                        script.src = "https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js";
+                        
+                        script.onload = () => {
+                            this.log('✅ Script oficial OneSignal cargado');
+                            
+                            // Esperar a que OneSignal esté disponible
+                            const checkOneSignal = (attempts = 0) => {
+                                if (window.OneSignal) {
+                                    this.log('✅ OneSignal SDK disponible');
+                                    resolve();
+                                } else if (attempts < 50) { // 5 segundos máximo
+                                    setTimeout(() => checkOneSignal(attempts + 1), 100);
+                                } else {
+                                    reject(new Error('OneSignal no disponible después de cargar script'));
+                                }
+                            };
+                            
+                            checkOneSignal();
+                        };
+                        
+                        script.onerror = (error) => {
+                            this.log('💥 Error cargando script oficial OneSignal', 'error');
+                            reject(new Error('Failed to load OneSignal script'));
+                        };
+                        
+                        // Timeout global
+                        setTimeout(() => {
+                            if (!window.OneSignal) {
+                                reject(new Error('OneSignal script timeout - SDK no disponible'));
+                            }
+                        }, 15000);
+                        
+                        document.head.appendChild(script);
+                        this.log('📡 Script OneSignal añadido al DOM');
+                    });
                 }
 
                 setupEventHandlers(OneSignal) {
@@ -542,24 +638,262 @@
                 
                 console.log('🔧 OneSignalManager asignado a window.oneSignalManager');
                 
-                manager.initialize().then(() => {
-                    console.log('✅ OneSignal inicializado automáticamente');
-                    
-                    // Disparar evento personalizado para indicar que está listo
-                    window.dispatchEvent(new CustomEvent('oneSignalReady', {
-                        detail: { manager: manager }
-                    }));
-                    
-                }).catch(error => {
-                    console.error('❌ Error en auto-inicialización OneSignal:', error);
-                });
+                // Intentar inicialización con reintentos
+                const initWithRetry = async (attempt = 1, maxAttempts = 3) => {
+                    try {
+                        console.log(`🔄 Intento de inicialización OneSignal #${attempt}`);
+                        await manager.initialize();
+                        console.log('✅ OneSignal inicializado automáticamente');
+                        
+                        // Disparar evento personalizado para indicar que está listo
+                        window.dispatchEvent(new CustomEvent('oneSignalReady', {
+                            detail: { manager: manager }
+                        }));
+                        
+                    } catch (error) {
+                        console.error(`❌ Error en inicialización OneSignal (intento ${attempt}):`, error);
+                        
+                        if (attempt < maxAttempts) {
+                            console.log(`🔄 Reintentando en ${attempt * 2} segundos...`);
+                            setTimeout(() => initWithRetry(attempt + 1, maxAttempts), attempt * 2000);
+                        } else {
+                            console.error('💥 Todos los intentos de inicialización OneSignal fallaron');
+                            // Mostrar tarjeta de debug automáticamente
+                            const debugCard = document.getElementById('debug-card');
+                            if (debugCard) {
+                                debugCard.style.display = 'block';
+                            }
+                        }
+                    }
+                };
+                
+                initWithRetry();
             });
 
             console.log('📦 OneSignal integrado cargado completamente');
+            
+            // Función de verificación periódica de OneSignal
+            function startOneSignalHealthCheck() {
+                console.log('🔍 Iniciando verificación periódica de OneSignal...');
+                
+                setInterval(() => {
+                    if (window.oneSignalManager && window.oneSignalManager.isInitialized) {
+                        // Todo OK, no hacer nada
+                        return;
+                    }
+                    
+                    // Si OneSignal no está inicializado después de 30 segundos, intentar recuperar
+                    console.warn('⚠️ OneSignal no inicializado en verificación periódica');
+                    
+                    if (window.oneSignalManager && !window.oneSignalManager.isInitialized) {
+                        console.log('🔄 Intentando reinicializar OneSignal...');
+                        window.oneSignalManager.initialize().catch(error => {
+                            console.error('❌ Error en reinicialización automática:', error);
+                        });
+                    }
+                }, 30000); // Verificar cada 30 segundos
+            }
+            
+            // Iniciar verificación después de 1 minuto
+            setTimeout(startOneSignalHealthCheck, 60000);
         </script>
 
         <!-- Custom JS -->
         <script src="js/alertas.js"></script>
+
+        <!-- Vibration Test Script -->
+        <script>
+            // Sistema completo de prueba de vibración
+            let vibrationInfo = {};
+            
+            function detectDevice() {
+                const userAgent = navigator.userAgent.toLowerCase();
+                const deviceInfo = {
+                    userAgent: navigator.userAgent,
+                    platform: navigator.platform,
+                    isAndroid: /android/i.test(userAgent),
+                    isIOS: /iphone|ipad|ipod/i.test(userAgent),
+                    isMobile: /android|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent),
+                    isChrome: /chrome/i.test(userAgent) && !/edge/i.test(userAgent),
+                    isFirefox: /firefox/i.test(userAgent),
+                    isSamsung: /samsung/i.test(userAgent),
+                    hasVibrate: 'vibrate' in navigator,
+                    hasWebkitVibrate: 'webkitVibrate' in navigator,
+                    isHTTPS: location.protocol === 'https:',
+                    touchSupport: 'ontouchstart' in window
+                };
+                
+                vibrationInfo = deviceInfo;
+                return deviceInfo;
+            }
+            
+            function showDeviceInfo() {
+                const info = detectDevice();
+                const infoText = `
+🔍 INFORMACIÓN DEL DISPOSITIVO:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📱 Dispositivo: ${info.platform}
+🤖 Android: ${info.isAndroid ? '✅' : '❌'}
+🍎 iOS: ${info.isIOS ? '✅' : '❌'}
+📲 Móvil: ${info.isMobile ? '✅' : '❌'}
+🔒 HTTPS: ${info.isHTTPS ? '✅' : '❌'}
+👆 Touch: ${info.touchSupport ? '✅' : '❌'}
+
+🌐 NAVEGADOR:
+${info.isChrome ? '✅ Chrome' : '❌ Chrome'}
+${info.isFirefox ? '✅ Firefox' : '❌ Firefox'}
+${info.isSamsung ? '✅ Samsung' : '❌ Samsung'}
+
+📳 VIBRACIÓN:
+navigator.vibrate: ${info.hasVibrate ? '✅' : '❌'}
+navigator.webkitVibrate: ${info.hasWebkitVibrate ? '✅' : '❌'}
+
+🔧 User Agent:
+${info.userAgent}
+                `.trim();
+                
+                console.log(infoText);
+                alert(infoText);
+            }
+            
+            function testVibrationNow() {
+                console.log('📳 === INICIANDO PRUEBA DE VIBRACIÓN ===');
+                
+                const info = detectDevice();
+                
+                // Mostrar información del dispositivo primero
+                console.log('📱 Información del dispositivo:', info);
+                
+                // Verificaciones previas
+                if (info.isIOS) {
+                    alert('⚠️ iOS no soporta vibración web\n\nLos dispositivos iPhone/iPad no permiten vibración desde navegadores web.');
+                    return;
+                }
+                
+                if (!info.isMobile) {
+                    alert('⚠️ Solo funciona en dispositivos móviles\n\nLa vibración web solo está disponible en teléfonos y tablets.');
+                    return;
+                }
+                
+                if (!info.isHTTPS && location.hostname !== 'localhost') {
+                    alert('⚠️ Requiere HTTPS\n\nLa vibración web solo funciona en conexiones seguras (HTTPS).');
+                    return;
+                }
+                
+                if (!info.hasVibrate && !info.hasWebkitVibrate) {
+                    alert('❌ Tu navegador no soporta vibración\n\nIntenta usar Chrome o Firefox en Android.');
+                    return;
+                }
+                
+                // Múltiples pruebas de vibración
+                try {
+                    console.log('🔄 Ejecutando pruebas de vibración...');
+                    
+                    // Prueba 1: Vibración simple
+                    console.log('📳 Prueba 1: Vibración simple (200ms)');
+                    if (navigator.vibrate) {
+                        navigator.vibrate(200);
+                    }
+                    
+                    setTimeout(() => {
+                        // Prueba 2: Vibración con patrón
+                        console.log('📳 Prueba 2: Patrón de vibración');
+                        const pattern = [100, 50, 100, 50, 200];
+                        if (navigator.vibrate) {
+                            navigator.vibrate(pattern);
+                        } else if (navigator.webkitVibrate) {
+                            navigator.webkitVibrate(pattern);
+                        }
+                    }, 1000);
+                    
+                    setTimeout(() => {
+                        // Prueba 3: Vibración larga
+                        console.log('📳 Prueba 3: Vibración larga (500ms)');
+                        if (navigator.vibrate) {
+                            navigator.vibrate(500);
+                        }
+                    }, 3000);
+                    
+                    // Mostrar resultado
+                    const resultMsg = `
+📳 PRUEBAS DE VIBRACIÓN ENVIADAS
+
+✅ Se ejecutaron 3 pruebas:
+1️⃣ Vibración simple (200ms)
+2️⃣ Patrón: 100-50-100-50-200ms  
+3️⃣ Vibración larga (500ms)
+
+🔧 DIAGNÓSTICO:
+${info.isAndroid ? '✅' : '❌'} Android detectado
+${info.hasVibrate ? '✅' : '❌'} API vibrate disponible
+${info.isHTTPS ? '✅' : '❌'} Conexión HTTPS
+${info.isChrome ? '✅' : '❌'} Chrome (recomendado)
+
+💡 SI NO VIBRÓ, VERIFICA:
+• Vibración habilitada en ajustes del teléfono
+• Modo silencio/vibración del teléfono
+• Permisos del navegador para el sitio
+• Usar Chrome en Android es lo más compatible
+
+🔍 Ver consola (F12) para más detalles
+                    `;
+                    
+                    alert(resultMsg);
+                    
+                } catch (error) {
+                    console.error('❌ Error en vibración:', error);
+                    alert(`❌ ERROR EN VIBRACIÓN:\n\n${error.message}\n\nRevisa la consola (F12) para más detalles.`);
+                }
+            }
+            
+            // Función para prueba básica sin alertas
+            function testVibrationSilent() {
+                if (navigator.vibrate) {
+                    navigator.vibrate([200, 100, 200]);
+                    console.log('📳 Vibración silenciosa enviada');
+                    return true;
+                }
+                return false;
+            }
+            
+            // Agregar múltiples botones de prueba
+            document.addEventListener('DOMContentLoaded', function() {
+                console.log('🔧 Configurando botones de vibración...');
+                
+                // Botón principal de prueba
+                const testBtn = document.getElementById('test-vibration');
+                if (testBtn) {
+                    testBtn.addEventListener('click', testVibrationNow);
+                    console.log('✅ Botón principal de vibración configurado');
+                }
+                
+                // Agregar botón de información del dispositivo después del botón de prueba
+                const vibrationDiv = testBtn?.parentNode;
+                if (vibrationDiv) {
+                    const infoBtn = document.createElement('button');
+                    infoBtn.type = 'button';
+                    infoBtn.className = 'btn btn-outline-info btn-sm ms-2';
+                    infoBtn.innerHTML = '<i class="fas fa-info-circle me-1"></i>Info Dispositivo';
+                    infoBtn.addEventListener('click', showDeviceInfo);
+                    
+                    vibrationDiv.appendChild(infoBtn);
+                    console.log('✅ Botón de información agregado');
+                }
+                
+                // Detectar dispositivo al cargar
+                const deviceInfo = detectDevice();
+                console.log('📱 Dispositivo detectado:', deviceInfo);
+                
+                // Prueba automática silenciosa en móviles Android
+                if (deviceInfo.isAndroid && deviceInfo.hasVibrate) {
+                    setTimeout(() => {
+                        console.log('🔄 Realizando prueba automática silenciosa...');
+                        testVibrationSilent();
+                    }, 2000);
+                }
+            });
+        </script>
 
         <!-- OneSignal Initialization -->
         <script>
@@ -596,6 +930,11 @@
                         pushStatus.style.display = 'block';
                         pushStatus.innerHTML = '<span class="badge bg-success"><i class="fas fa-check me-1"></i>Notificaciones habilitadas</span>';
                     }
+                    
+                    // Sincronizar con alertas.js
+                    window.dispatchEvent(new CustomEvent('pushNotificationsEnabled', {
+                        detail: { enabled: optedIn }
+                    }));
                 }
             }
 
@@ -614,6 +953,12 @@
                                         pushStatus.style.display = 'block';
                                         pushStatus.innerHTML = '<span class="badge bg-success"><i class="fas fa-check me-1"></i>Notificaciones habilitadas</span>';
                                     }
+                                    
+                                    // Disparar evento personalizado para sincronizar con alertas.js
+                                    window.dispatchEvent(new CustomEvent('pushNotificationsEnabled', {
+                                        detail: { enabled: true }
+                                    }));
+                                    
                                 } catch (error) {
                                     console.error('[App] ❌ Error en suscripción:', error);
                                     e.target.checked = false;
@@ -633,6 +978,12 @@
                                     if (pushStatus) {
                                         pushStatus.style.display = 'none';
                                     }
+                                    
+                                    // Disparar evento personalizado para sincronizar con alertas.js
+                                    window.dispatchEvent(new CustomEvent('pushNotificationsEnabled', {
+                                        detail: { enabled: false }
+                                    }));
+                                    
                                 } catch (error) {
                                     console.error('[App] ❌ Error cancelando suscripción:', error);
                                 }
@@ -645,9 +996,32 @@
                 setTimeout(() => {
                     if (!window.oneSignalManager || !window.oneSignalManager.isInitialized) {
                         console.warn('[App] ⚠️ OneSignal no inicializado después de 10 segundos, mostrando debug');
+                        
+                        // Ejecutar diagnóstico automático
+                        const debugInfo = debugOneSignal();
+                        
+                        // Mostrar tarjeta de debug
                         const debugCard = document.getElementById('debug-card');
                         if (debugCard) {
                             debugCard.style.display = 'block';
+                            
+                            // Añadir información del diagnóstico al debug card
+                            const debugBody = debugCard.querySelector('.card-body');
+                            if (debugBody && !debugBody.querySelector('.auto-debug')) {
+                                const autoDebugDiv = document.createElement('div');
+                                autoDebugDiv.className = 'auto-debug mt-3 pt-3 border-top';
+                                autoDebugDiv.innerHTML = `
+                                    <small class="text-warning">
+                                        <i class="fas fa-exclamation-triangle me-1"></i>
+                                        <strong>Diagnóstico Automático:</strong><br>
+                                        • Script cargado: ${debugInfo.scriptLoaded ? '✅' : '❌'}<br>
+                                        • Manager disponible: ${debugInfo.oneSignalManager ? '✅' : '❌'}<br>
+                                        • HTTPS: ${debugInfo.isHTTPS ? '✅' : '❌'}<br>
+                                        • Hostname: ${debugInfo.hostname}
+                                    </small>
+                                `;
+                                debugBody.appendChild(autoDebugDiv);
+                            }
                         }
                     }
                 }, 10000);
@@ -655,62 +1029,245 @@
 
             // Funciones de debug para OneSignal
             function debugOneSignal() {
-                console.log('🔍 === DEBUG ONESIGNAL ===');
+                console.log('🔍 === DEBUG ONESIGNAL DETALLADO ===');
                 
-                if (window.oneSignalManager) {
-                    console.log('✅ OneSignalManager disponible');
-                    console.log('Inicializado:', window.oneSignalManager.isInitialized);
+                const debugInfo = {
+                    oneSignalManager: !!window.oneSignalManager,
+                    managerInitialized: window.oneSignalManager ? window.oneSignalManager.isInitialized : false,
+                    oneSignalSDK: !!window.OneSignal,
+                    oneSignalDeferred: !!window.OneSignalDeferred,
+                    deferredLength: window.OneSignalDeferred ? window.OneSignalDeferred.length : 0,
+                    scriptLoaded: !!document.querySelector('script[src*="OneSignalSDK.page.js"]'),
+                    isHTTPS: location.protocol === 'https:',
+                    hostname: location.hostname,
+                    timestamp: new Date().toISOString()
+                };
+                
+                console.log('📊 Estado de OneSignal:', debugInfo);
+                
+                // Verificar el script específicamente
+                const script = document.querySelector('script[src*="OneSignalSDK.page.js"]');
+                if (script) {
+                    console.log('📜 Script OneSignal encontrado:');
+                    console.log('- Src:', script.src);
+                    console.log('- Async:', script.async);
+                    console.log('- Loaded:', script.readyState || 'unknown');
+                }
+                
+                // Verificar objetos globales relacionados
+                console.log('🌐 Objetos globales:');
+                console.log('- window.OneSignal:', typeof window.OneSignal);
+                console.log('- window.OneSignalDeferred:', typeof window.OneSignalDeferred);
+                console.log('- window.oneSignalManager:', typeof window.oneSignalManager);
+                
+                if (window.OneSignal) {
+                    console.log('✅ OneSignal SDK disponible - verificando funcionalidad...');
                     
-                    if (window.OneSignal) {
-                        console.log('✅ OneSignal SDK disponible');
+                    try {
+                        // Verificar métodos principales
+                        const hasInit = typeof window.OneSignal.init === 'function';
+                        const hasNotifications = !!window.OneSignal.Notifications;
+                        const hasUser = !!window.OneSignal.User;
                         
-                        try {
+                        console.log('🔧 Métodos OneSignal:');
+                        console.log('- init():', hasInit);
+                        console.log('- Notifications:', hasNotifications);
+                        console.log('- User:', hasUser);
+                        
+                        if (hasNotifications && hasUser) {
                             const permission = OneSignal.Notifications.permission;
                             const optedIn = OneSignal.User.PushSubscription.optedIn;
                             const id = OneSignal.User.PushSubscription.id;
                             
-                            console.log('Permiso:', permission);
-                            console.log('Opted In:', optedIn);
-                            console.log('ID:', id);
+                            console.log('📱 Estado OneSignal:');
+                            console.log('- Permiso:', permission);
+                            console.log('- Opted In:', optedIn);
+                            console.log('- ID:', id);
                             
-                            alert(`OneSignal Debug:\nPermiso: ${permission}\nOpted In: ${optedIn}\nID: ${id || 'null'}`);
-                        } catch (error) {
-                            console.error('Error obteniendo estado:', error);
-                            alert('Error obteniendo estado OneSignal: ' + error.message);
+                            const statusMsg = `OneSignal Debug Completo:
+
+✅ SDK DISPONIBLE Y FUNCIONAL
+
+Estado de Suscripción:
+• Permiso: ${permission}
+• Opted In: ${optedIn}
+• ID: ${id || 'null'}
+
+Estado Técnico:
+• Script Cargado: ${debugInfo.scriptLoaded ? '✅' : '❌'}
+• Manager Init: ${debugInfo.managerInitialized ? '✅' : '❌'}
+• HTTPS: ${debugInfo.isHTTPS ? '✅' : '❌'}
+• Deferred Queue: ${debugInfo.deferredLength} items
+• Hostname: ${debugInfo.hostname}
+
+Métodos Verificados:
+• init(): ${hasInit ? '✅' : '❌'}
+• Notifications: ${hasNotifications ? '✅' : '❌'}
+• User: ${hasUser ? '✅' : '❌'}
+
+${optedIn ? '🟢 Todo funciona correctamente' : '🟡 Necesita suscripción'}`;
+
+                            alert(statusMsg);
+                        } else {
+                            alert(`OneSignal SDK parcialmente disponible\n\nMétodos encontrados:\n- init(): ${hasInit}\n- Notifications: ${hasNotifications}\n- User: ${hasUser}\n\nEl SDK puede estar cargándose aún.`);
                         }
-                    } else {
-                        console.log('❌ OneSignal SDK no disponible');
-                        alert('OneSignal SDK no está disponible');
+                        
+                    } catch (error) {
+                        console.error('❌ Error verificando OneSignal:', error);
+                        alert(`Error verificando OneSignal SDK:\n${error.message}\n\nEl SDK está presente pero no responde correctamente.\n\nEstado Técnico:\n- Script: ${debugInfo.scriptLoaded}\n- Manager: ${debugInfo.managerInitialized}\n- HTTPS: ${debugInfo.isHTTPS}`);
                     }
                 } else {
-                    console.log('❌ OneSignalManager no disponible');
-                    alert('OneSignalManager no está disponible');
+                    console.log('❌ OneSignal SDK no disponible');
+                    
+                    const detailedMsg = `OneSignal SDK NO DISPONIBLE
+
+Diagnóstico Detallado:
+• Script cargado: ${debugInfo.scriptLoaded ? '✅' : '❌'}
+• Manager disponible: ${debugInfo.oneSignalManager ? '✅' : '❌'}
+• Manager inicializado: ${debugInfo.managerInitialized ? '✅' : '❌'}
+• HTTPS: ${debugInfo.isHTTPS ? '✅' : '❌'}
+• Hostname: ${debugInfo.hostname}
+• Deferred Queue: ${debugInfo.deferredLength} items
+
+${debugInfo.scriptLoaded ? 
+'🟡 Script cargado pero SDK no disponible\n   → Posible error en la carga del SDK' : 
+'🔴 Script no cargado\n   → Error de conectividad o bloqueo'}
+
+Soluciones:
+1. Recargar la página
+2. Verificar conexión a internet
+3. Desactivar bloqueador de ads
+4. Usar modo incógnito para probar`;
+                    
+                    alert(detailedMsg);
                 }
+                
+                return debugInfo;
             }
             
             function forceInitOneSignal() {
                 console.log('🔄 Forzando inicialización OneSignal...');
                 
-                if (window.oneSignalManager) {
-                    window.oneSignalManager.initialize().then(() => {
-                        console.log('✅ Inicialización forzada exitosa');
-                        alert('OneSignal inicializado exitosamente');
-                    }).catch(error => {
-                        console.error('❌ Error en inicialización forzada:', error);
-                        alert('Error en inicialización: ' + error.message);
-                    });
-                } else {
-                    // Crear nuevo manager
-                    const manager = new window.OneSignalManager();
-                    window.oneSignalManager = manager;
+                // Función de prueba de conectividad mejorada
+                async function testConnectivity() {
+                    console.log('🌐 Probando conectividad...');
                     
-                    manager.initialize().then(() => {
-                        console.log('✅ Manager creado e inicializado');
-                        alert('OneSignal manager creado e inicializado');
-                    }).catch(error => {
-                        console.error('❌ Error creando manager:', error);
-                        alert('Error creando manager: ' + error.message);
+                    try {
+                        // Probar conectividad básica
+                        const response = await fetch('https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js', { 
+                            method: 'HEAD',
+                            cache: 'no-cache'
+                        });
+                        
+                        if (!response.ok) {
+                            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                        }
+                        
+                        console.log('✅ Conectividad a OneSignal CDN verificada');
+                        return true;
+                        
+                    } catch (error) {
+                        console.error('❌ Error de conectividad:', error);
+                        
+                        // Probar conectividad alternativa
+                        try {
+                            const altResponse = await fetch('https://onesignal.com', { 
+                                method: 'HEAD',
+                                cache: 'no-cache'
+                            });
+                            
+                            if (altResponse.ok) {
+                                console.warn('⚠️ OneSignal.com accesible pero CDN no. Posible bloqueo específico.');
+                                return false;
+                            }
+                        } catch (altError) {
+                            console.error('❌ OneSignal completamente inaccesible');
+                        }
+                        
+                        throw error;
+                    }
+                }
+                
+                // Proceder con inicialización
+                testConnectivity()
+                    .then(() => {
+                        console.log('✅ Conectividad verificada, procediendo con inicialización...');
+                        return proceedWithInit();
+                    })
+                    .catch(error => {
+                        console.error('❌ Error de conectividad a OneSignal:', error);
+                        alert(`Error de conectividad a OneSignal CDN:
+${error.message}
+
+Posibles causas:
+• Bloqueador de anuncios activo
+• Firewall corporativo
+• Problemas de conectividad
+• Restricciones de red
+
+Soluciones:
+1. Desactivar bloqueador de ads
+2. Usar otra red WiFi/datos móviles
+3. Modo incógnito del navegador
+4. VPN si hay restricciones geográficas`);
                     });
+                
+                function proceedWithInit() {
+                    console.log('🔧 Procediendo con inicialización forzada...');
+                    
+                    if (window.oneSignalManager) {
+                        console.log('🔄 Reiniciando manager existente...');
+                        
+                        // Resetear el manager completamente
+                        window.oneSignalManager.isInitialized = false;
+                        window.oneSignalManager.initPromise = null;
+                        
+                        // Limpiar script anterior si existe
+                        const oldScript = document.querySelector('script[src*="OneSignalSDK.page.js"]');
+                        if (oldScript) {
+                            console.log('🗑️ Removiendo script anterior...');
+                            oldScript.remove();
+                            delete window.OneSignal;
+                        }
+                        
+                        window.oneSignalManager.initialize()
+                            .then(() => {
+                                console.log('✅ Manager reinicializado exitosamente');
+                                alert('✅ OneSignal reinicializado correctamente\n\nPuedes probar las notificaciones ahora.');
+                                
+                                // Ocultar tarjeta de debug
+                                const debugCard = document.getElementById('debug-card');
+                                if (debugCard) {
+                                    debugCard.style.display = 'none';
+                                }
+                            })
+                            .catch(error => {
+                                console.error('❌ Error en reinicialización:', error);
+                                alert(`❌ Error en reinicialización:\n${error.message}\n\nRevisa la consola para más detalles.`);
+                            });
+                    } else {
+                        console.log('🆕 Creando nuevo manager...');
+                        
+                        // Crear nuevo manager
+                        const manager = new window.OneSignalManager();
+                        window.oneSignalManager = manager;
+                        
+                        manager.initialize()
+                            .then(() => {
+                                console.log('✅ Nuevo manager creado exitosamente');
+                                alert('✅ OneSignal inicializado correctamente\n\nPuedes activar las notificaciones ahora.');
+                                
+                                // Ocultar tarjeta de debug
+                                const debugCard = document.getElementById('debug-card');
+                                if (debugCard) {
+                                    debugCard.style.display = 'none';
+                                }
+                            })
+                            .catch(error => {
+                                console.error('❌ Error creando manager:', error);
+                                alert(`❌ Error creando manager:\n${error.message}\n\nPuede ser un problema de bloqueo o configuración.`);
+                            });
+                    }
                 }
             }
         </script>
@@ -722,7 +1279,7 @@
             let swRegistration = null;
             
             // Versión actual de la aplicación (cambiar solo cuando queramos forzar actualización)
-            const APP_VERSION = '1.2.0';
+            const APP_VERSION = '1.2.7';
             
             // Registrar Service Worker para funcionalidad PWA
             if ('serviceWorker' in navigator) {
