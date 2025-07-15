@@ -767,16 +767,68 @@ class MindfulnessAlerts {
         const randomMessage = messages[Math.floor(Math.random() * messages.length)];
         
         try {
-            // Enviar notificación local (no se pueden enviar push desde frontend)
-            this.showNotification(randomMessage);
+            // Verificar permisos antes de enviar
+            const permission = window.OneSignal.Notifications.permission;
+            const hasPermission = permission === 'granted' || permission === true;
             
-            // Log para debug
+            if (!hasPermission) {
+                console.log('📱 Sin permisos, enviando notificación local...');
+                this.showBrowserNotification(randomMessage);
+                return;
+            }
+
+            // Intentar enviar notificación usando el método mejorado de OneSignal
+            if (this.oneSignalManager && typeof this.oneSignalManager.sendTestNotification === 'function') {
+                console.log('📱 Enviando notificación push via OneSignal...');
+                await this.oneSignalManager.sendTestNotification();
+            } else {
+                // Fallback: Notificación del navegador
+                console.log('📱 Enviando notificación local...');
+                this.showBrowserNotification(randomMessage);
+            }
+            
             console.log(`📱 Notificación enviada: ${randomMessage}`);
             
         } catch (error) {
-            console.error('Error sending notification:', error);
+            console.error('Error sending push notification:', error);
             // Fallback a notificación web
-            this.showNotification();
+            this.showBrowserNotification(randomMessage);
+        }
+    }
+
+    showBrowserNotification(message = null) {
+        if (!message) {
+            message = "🧘 Momento de Atención Plena - Toma una pausa consciente";
+        }
+
+        // Verificar permisos de notificación
+        if ('Notification' in window && Notification.permission === 'granted') {
+            const notification = new Notification('🧘 Momento de Atención Plena', {
+                body: message,
+                icon: '/assets/icons/192x192.png',
+                badge: '/assets/icons/48x48.png',
+                tag: 'mindfulness-alert',
+                requireInteraction: false,
+                silent: false,
+                vibrate: this.config.vibrationEnabled ? [200, 100, 200] : []
+            });
+
+            notification.onclick = () => {
+                window.focus();
+                notification.close();
+            };
+
+            // Auto-cerrar después de 5 segundos
+            setTimeout(() => {
+                notification.close();
+            }, 5000);
+        } else if ('Notification' in window && Notification.permission === 'default') {
+            // Solicitar permisos si no se han otorgado
+            Notification.requestPermission().then(permission => {
+                if (permission === 'granted') {
+                    this.showBrowserNotification(message);
+                }
+            });
         }
     }
 
