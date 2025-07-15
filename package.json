@@ -1,0 +1,43 @@
+{
+  "name": "caminomedio-alertas",
+  "version": "1.0.0",
+  "description": "Sistema de Alertas de Mindfulness para CaminoMedio - OneSignal Push Notifications",
+  "main": "config-server.js",
+  "scripts": {
+    "start": "node config-server.js",
+    "dev": "nodemon config-server.js",
+    "serve": "python3 -m http.server 8081",
+    "serve-https": "python3 -m http.server 8443 --bind 0.0.0.0",
+    "test": "echo \"No tests specified\" && exit 0",
+    "build": "echo \"Static site - no build needed\" && exit 0",
+    "deploy": "echo \"Configure your deployment settings\" && exit 1"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "keywords": [
+    "onesignal",
+    "push-notifications",
+    "mindfulness",
+    "meditation",
+    "alertas",
+    "caminomedio",
+    "pwa",
+    "service-worker"
+  ],
+  "author": "CaminoMedio",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sasogu/CaminoMedio-Alertas"
+  },
+  "homepage": "https://alertas.caminomedio.org",
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}

@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prueba OneSignal - Camino Medio</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .test-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            margin: 2rem auto;
+            max-width: 800px;
+        }
+        
+        .status-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            margin: 1rem 0;
+            padding: 1.5rem;
+            border-left: 5px solid #dee2e6;
+            transition: all 0.3s ease;
+        }
+        
+        .status-card.success {
+            border-left-color: #28a745;
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+        }
+        
+        .status-card.error {
+            border-left-color: #dc3545;
+            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+        }
+        
+        .status-card.warning {
+            border-left-color: #ffc107;
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+        }
+        
+        .test-button {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            border: none;
+            border-radius: 50px;
+            padding: 12px 30px;
+            color: white;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+        }
+        
+        .test-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(40, 167, 69, 0.4);
+        }
+        
+        .test-button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .console-output {
+            background: #1a1a1a;
+            color: #00ff00;
+            border-radius: 10px;
+            padding: 1rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            max-height: 300px;
+            overflow-y: auto;
+            margin: 1rem 0;
+        }
+        
+        .zen-icon {
+            font-size: 3rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="test-container p-4">
+            <!-- Header -->
+            <div class="text-center mb-4">
+                <i class="fas fa-bell zen-icon"></i>
+                <h1 class="mt-3 mb-2">Prueba OneSignal</h1>
+                <p class="text-muted">Verificación del sistema de notificaciones push</p>
+            </div>
+
+            <!-- Estado de la configuración -->
+            <div id="config-status" class="status-card">
+                <h5><i class="fas fa-cog me-2"></i>Estado de Configuración</h5>
+                <div id="config-details">
+                    <p class="mb-1"><i class="fas fa-spinner fa-spin me-2"></i>Verificando configuración...</p>
+                </div>
+            </div>
+
+            <!-- Estado de OneSignal -->
+            <div id="onesignal-status" class="status-card">
+                <h5><i class="fas fa-satellite-dish me-2"></i>Estado de OneSignal</h5>
+                <div id="onesignal-details">
+                    <p class="mb-1"><i class="fas fa-spinner fa-spin me-2"></i>Inicializando OneSignal...</p>
+                </div>
+            </div>
+
+            <!-- Estado de permisos -->
+            <div id="permission-status" class="status-card">
+                <h5><i class="fas fa-shield-alt me-2"></i>Estado de Permisos</h5>
+                <div id="permission-details">
+                    <p class="mb-1"><i class="fas fa-spinner fa-spin me-2"></i>Verificando permisos...</p>
+                </div>
+            </div>
+
+            <!-- Botones de prueba -->
+            <div class="text-center my-4">
+                <button id="btn-request-permission" class="test-button me-2 mb-2">
+                    <i class="fas fa-bell me-2"></i>Solicitar Permisos
+                </button>
+                <button id="btn-test-notification" class="test-button me-2 mb-2">
+                    <i class="fas fa-paper-plane me-2"></i>Enviar Notificación OneSignal
+                </button>
+                <button id="btn-test-local" class="test-button me-2 mb-2">
+                    <i class="fas fa-volume-up me-2"></i>Probar Notificación Local
+                </button>
+                <button id="btn-debug-config" class="btn btn-outline-info me-2 mb-2">
+                    <i class="fas fa-bug me-2"></i>Debug Configuración
+                </button>
+                <button id="btn-debug-sw" class="btn btn-outline-warning me-2 mb-2">
+                    <i class="fas fa-cogs me-2"></i>Debug Service Workers
+                </button>
+            </div>
+
+            <!-- Información del usuario -->
+            <div id="user-info" class="status-card">
+                <h5><i class="fas fa-user me-2"></i>Información del Usuario</h5>
+                <div id="user-details">
+                    <p class="mb-1">Player ID: <span id="player-id">No disponible</span></p>
+                    <p class="mb-1">Estado de suscripción: <span id="subscription-status">No disponible</span></p>
+                    <p class="mb-0">Token: <span id="push-token">No disponible</span></p>
+                </div>
+            </div>
+
+            <!-- Consola de debugging -->
+            <div class="mt-4">
+                <h5><i class="fas fa-terminal me-2"></i>Consola de Debugging</h5>
+                <div id="console" class="console-output">
+                    <div class="text-info">[INIT] Iniciando pruebas de OneSignal...</div>
+                </div>
+                <button id="btn-clear-console" class="btn btn-outline-secondary btn-sm mt-2">
+                    <i class="fas fa-trash me-1"></i>Limpiar Consola
+                </button>
+            </div>
+
+            <!-- Instrucciones -->
+            <div class="mt-4">
+                <h5><i class="fas fa-question-circle me-2"></i>Instrucciones de Uso</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>🔧 Desarrollo Local:</h6>
+                        <ol>
+                            <li>La página funciona con credenciales en <code>env-config.js</code></li>
+                            <li>Haz clic en "Solicitar Permisos" para habilitar notificaciones</li>
+                            <li>Usa "Probar Notificación Local" primero</li>
+                            <li>HTTPS requerido para OneSignal (producción)</li>
+                        </ol>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>🚀 Producción:</h6>
+                        <ol>
+                            <li>Ejecuta: <code>cd alertas && node config-server.js</code></li>
+                            <li>Sube service worker a la raíz del dominio</li>
+                            <li>Verifica HTTPS habilitado</li>
+                            <li>Prueba notificaciones push</li>
+                        </ol>
+                    </div>
+                </div>
+                
+                <div class="alert alert-info mt-3">
+                    <i class="fas fa-lightbulb me-2"></i>
+                    <strong>Tip:</strong> En desarrollo local, las notificaciones OneSignal pueden no funcionar completamente. 
+                    Usa "Probar Notificación Local" para verificar que los permisos funcionan.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- OneSignal SDK con fallback local -->
+    <script>
+        // Función para cargar OneSignal con fallback
+        function loadOneSignalSDK() {
+            return new Promise((resolve, reject) => {
+                // Intentar cargar desde CDN primero
+                const cdnScript = document.createElement('script');
+                cdnScript.src = 'https://cdn.onesignal.com/sdks/OneSignalSDK.js';
+                cdnScript.defer = true;
+                
+                cdnScript.onload = () => {
+                    console.log('✅ OneSignal SDK cargado desde CDN');
+                    resolve();
+                };
+                
+                cdnScript.onerror = () => {
+                    console.warn('⚠️ Fallo CDN, intentando SDK local...');
+                    // Fallback: cargar desde archivo local
+                    const localScript = document.createElement('script');
+                    localScript.src = 'js/OneSignalSDK.js';
+                    
+                    localScript.onload = () => {
+                        console.log('✅ OneSignal SDK cargado localmente');
+                        resolve();
+                    };
+                    
+                    localScript.onerror = () => {
+                        console.error('❌ Error cargando OneSignal SDK');
+                        reject(new Error('No se pudo cargar OneSignal SDK'));
+                    };
+                    
+                    document.head.appendChild(localScript);
+                };
+                
+                document.head.appendChild(cdnScript);
+            });
+        }
+        
+        // Cargar SDK al inicio
+        loadOneSignalSDK().catch(console.error);
+    </script>
+    
+    <!-- Configuración simple para pruebas -->
+    <script src="js/simple-config.js"></script>
+    
+    <!-- Configuración de entorno -->
+    <script src="js/env-config.js"></script>
+    
+    <!-- OneSignal Configuration -->
+    <script src="js/onesignal-config.js"></script>
+
+    <script>
+        class OneSignalTester {
+            constructor() {
+                this.console = document.getElementById('console');
+                this.configStatus = document.getElementById('config-status');
+                this.onesignalStatus = document.getElementById('onesignal-status');
+                this.permissionStatus = document.getElementById('permission-status');
+                
+                this.btnRequestPermission = document.getElementById('btn-request-permission');
+                this.btnTestNotification = document.getElementById('btn-test-notification');
+                this.btnTestLocal = document.getElementById('btn-test-local');
+                this.btnClearConsole = document.getElementById('btn-clear-console');
+                
+                this.setupEventListeners();
+                this.init();
+            }
+
+            log(message, type = 'info') {
+                const timestamp = new Date().toLocaleTimeString();
+                const colors = {
+                    info: '#00ff00',
+                    warn: '#ffff00', 
+                    error: '#ff0000',
+                    success: '#00ff88'
+                };
+                
+                this.console.innerHTML += `<div style="color: ${colors[type]}">[${timestamp}] ${message}</div>`;
+                this.console.scrollTop = this.console.scrollHeight;
+            }
+
+            updateStatus(element, status, message, icon = '') {
+                element.className = `status-card ${status}`;
+                const details = element.querySelector('div[id$="-details"]');
+                details.innerHTML = `<p class="mb-1"><i class="fas ${icon} me-2"></i>${message}</p>`;
+            }
+
+            setupEventListeners() {
+                this.btnRequestPermission.addEventListener('click', () => this.requestPermission());
+                this.btnTestNotification.addEventListener('click', () => this.testNotification());
+                this.btnTestLocal.addEventListener('click', () => this.testLocalNotification());
+                this.btnClearConsole.addEventListener('click', () => this.clearConsole());
+                
+                // Botones de debug
+                const btnDebugConfig = document.getElementById('btn-debug-config');
+                const btnDebugSW = document.getElementById('btn-debug-sw');
+                
+                if (btnDebugConfig) {
+                    btnDebugConfig.addEventListener('click', () => this.debugConfiguration());
+                }
+                if (btnDebugSW) {
+                    btnDebugSW.addEventListener('click', () => this.debugServiceWorkers());
+                }
+            }
+
+            async init() {
+                this.log('Iniciando verificación de configuración...');
+                
+                // Verificar configuración
+                await this.checkConfiguration();
+                
+                // Verificar OneSignal
+                await this.checkOneSignal();
+                
+                // Verificar permisos
+                await this.checkPermissions();
+                
+                this.log('Verificación inicial completada', 'success');
+            }
+
+            async checkConfiguration() {
+                try {
+                    this.log('🔍 Verificando configuración...');
+                    
+                    // Esperar a que envConfig esté disponible y listo
+                    let attempts = 0;
+                    while (!window.envConfig && attempts < 50) {
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                        attempts++;
+                    }
+
+                    if (!window.envConfig) {
+                        throw new Error('Configuración de entorno no disponible');
+                    }
+
+                    // Esperar a que la configuración esté completamente cargada
+                    this.log('⏳ Esperando configuración completa...', 'info');
+                    await window.envConfig.waitForReady();
+                    
+                    this.log('✅ Configuración lista, verificando validez...', 'info');
+
+                    // Verificar si hay configuración del servidor
+                    try {
+                        const response = await fetch('/api/config');
+                        if (response.ok) {
+                            const config = await response.json();
+                            this.updateStatus(this.configStatus, 'success', 
+                                `✅ Servidor configurado - App ID: ${config.ONESIGNAL_APP_ID.substring(0, 8)}...`, 
+                                'fa-check-circle');
+                            this.log(`✅ Configuración desde servidor: ${config.ONESIGNAL_APP_ID}`, 'success');
+                        } else {
+                            throw new Error('Servidor de configuración no disponible');
+                        }
+                    } catch (serverError) {
+                        // Fallback a configuración local
+                        if (window.envConfig.isConfigured()) {
+                            const appId = window.envConfig.get('ONESIGNAL_APP_ID');
+                            this.updateStatus(this.configStatus, 'warning', 
+                                `⚡ Modo desarrollo - App ID: ${appId.substring(0, 8)}... (Local)`, 
+                                'fa-exclamation-triangle');
+                            this.log(`⚡ Configuración local cargada: ${appId}`, 'warn');
+                            this.log('💡 Para producción, inicia: cd alertas && node config-server.js', 'info');
+                        } else {
+                            this.updateStatus(this.configStatus, 'error', 
+                                '❌ Configuración no válida - Verifica credenciales', 
+                                'fa-times-circle');
+                            this.log('❌ Configuración no válida - revisa env-config.js', 'error');
+                        }
+                    }
+
+                } catch (error) {
+                    this.updateStatus(this.configStatus, 'error', 
+                        `❌ Error: ${error.message}`, 'fa-times-circle');
+                    this.log(`❌ Error de configuración: ${error.message}`, 'error');
+                }
+            }
+
+            async checkOneSignal() {
+                try {
+                    this.log('🔌 Verificando OneSignal SDK...', 'info');
+                    
+                    // Verificar si el script se cargó
+                    const scripts = document.querySelectorAll('script[src*="OneSignalSDK"]');
+                    this.log(`📜 Scripts de OneSignal encontrados: ${scripts.length}`, 'info');
+                    
+                    if (scripts.length > 0) {
+                        for (let script of scripts) {
+                            this.log(`📋 Script: ${script.src} - loaded: ${script.readyState || 'unknown'}`, 'info');
+                        }
+                    }
+                    
+                    // Esperar a que OneSignal esté disponible
+                    let attempts = 0;
+                    while (!window.OneSignal && attempts < 100) {
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                        attempts++;
+                    }
+
+                    if (!window.OneSignal) {
+                        this.log('❌ window.OneSignal no está disponible después de 10 segundos', 'error');
+                        this.log('🔍 Verificando errores de red...', 'info');
+                        
+                        // Intentar cargar OneSignal manualmente para diagnóstico
+                        try {
+                            const response = await fetch('https://cdn.onesignal.com/sdks/OneSignalSDK.js');
+                            this.log(`🌐 CDN Response Status: ${response.status}`, 'info');
+                            if (!response.ok) {
+                                throw new Error(`CDN returned ${response.status}`);
+                            }
+                        } catch (fetchError) {
+                            this.log(`🚫 Error accessing CDN: ${fetchError.message}`, 'error');
+                        }
+                        
+                        throw new Error('OneSignal SDK no cargado - verifica conexión a internet');
+                    }
+
+                    this.log('📡 OneSignal SDK cargado, esperando inicialización...', 'info');
+
+                    // Esperar a que OneSignalManager esté inicializado
+                    attempts = 0;
+                    while (!window.oneSignalManager && attempts < 50) {
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                        attempts++;
+                    }
+
+                    if (window.oneSignalManager && window.oneSignalManager.isInitialized) {
+                        this.updateStatus(this.onesignalStatus, 'success', 
+                            '✅ OneSignal inicializado y listo', 'fa-check-circle');
+                        this.log('✅ OneSignal completamente inicializado', 'success');
+                        return true;
+                    } else if (window.oneSignalManager) {
+                        this.updateStatus(this.onesignalStatus, 'warning', 
+                            '⏳ OneSignal cargado pero esperando inicialización...', 'fa-exclamation-triangle');
+                        this.log('⏳ OneSignal aún inicializando', 'warn');
+                        
+                        // Log información de debug sobre el estado
+                        if (window.oneSignalManager.config) {
+                            this.log(`🔧 Config App ID: ${window.oneSignalManager.config.appId}`, 'info');
+                        } else {
+                            this.log('⚠️ OneSignalManager sin configuración - verificando config...', 'warn');
+                        }
+                        
+                        // Solo reintentar unas pocas veces más
+                        if (!this.onesignalRetries) this.onesignalRetries = 0;
+                        this.onesignalRetries++;
+                        
+                        if (this.onesignalRetries < 5) {
+                            setTimeout(() => this.checkOneSignal(), 3000);
+                        } else {
+                            this.log('⚠️ Máximo de reintentos alcanzado - OneSignal puede requerir HTTPS en producción', 'warn');
+                        }
+                        
+                        return false;
+                    } else {
+                        this.updateStatus(this.onesignalStatus, 'error', 
+                            '❌ OneSignalManager no disponible', 'fa-times-circle');
+                        this.log('❌ OneSignalManager no creado', 'error');
+                        return false;
+                    }
+
+                } catch (error) {
+                    this.updateStatus(this.onesignalStatus, 'error', 
+                        `❌ Error: ${error.message}`, 'fa-times-circle');
+                    this.log(`❌ Error de OneSignal: ${error.message}`, 'error');
+                    return false;
+                }
+            }
+
+            async checkPermissions() {
+                try {
+                    const permission = Notification.permission;
+                    let status, message, icon;
+
+                    switch (permission) {
+                        case 'granted':
+                            status = 'success';
+                            message = 'Permisos de notificación concedidos';
+                            icon = 'fa-check-circle';
+                            break;
+                        case 'denied':
+                            status = 'error';
+                            message = 'Permisos denegados - Habilítalos en configuración del navegador';
+                            icon = 'fa-times-circle';
+                            this.log('🚫 Permisos denegados. Para habilitar:', 'error');
+                            this.log('  Chrome: ⚙️ → Privacidad → Configuración del sitio → Notificaciones', 'info');
+                            this.log('  Firefox: 🔒 (candado) → Permisos → Notificaciones → Permitir', 'info');
+                            this.log('  Safari: Safari → Preferencias → Sitios web → Notificaciones', 'info');
+                            break;
+                        default:
+                            status = 'warning';
+                            message = 'Permisos de notificación no solicitados';
+                            icon = 'fa-exclamation-triangle';
+                    }
+
+                    this.updateStatus(this.permissionStatus, status, message, icon);
+                    this.log(`Estado de permisos: ${permission}`, permission === 'granted' ? 'success' : 'warn');
+
+                    // Actualizar información del usuario
+                    await this.updateUserInfo();
+
+                } catch (error) {
+                    this.updateStatus(this.permissionStatus, 'error', 
+                        `Error: ${error.message}`, 'fa-times-circle');
+                    this.log(`Error verificando permisos: ${error.message}`, 'error');
+                }
+            }
+
+            async updateUserInfo() {
+                try {
+                    if (window.OneSignal && window.oneSignalManager) {
+                        const playerId = await OneSignal.getUserId();
+                        const isSubscribed = await OneSignal.getNotificationPermission() === 'granted';
+                        const pushToken = await OneSignal.getRegistrationId();
+
+                        document.getElementById('player-id').textContent = playerId || 'No disponible';
+                        document.getElementById('subscription-status').textContent = isSubscribed ? 'Suscrito' : 'No suscrito';
+                        document.getElementById('push-token').textContent = pushToken ? pushToken.substring(0, 20) + '...' : 'No disponible';
+                    }
+                } catch (error) {
+                    this.log(`Error obteniendo información del usuario: ${error.message}`, 'error');
+                }
+            }
+
+            async requestPermission() {
+                try {
+                    this.log('🔔 Solicitando permisos de notificación...');
+                    
+                    // Intentar con OneSignal primero si está disponible
+                    if (window.oneSignalManager && window.oneSignalManager.isInitialized) {
+                        this.log('📱 Usando OneSignal para solicitar permisos...', 'info');
+                        const result = await window.oneSignalManager.requestPermission();
+                        if (result) {
+                            this.log('✅ Permisos concedidos via OneSignal', 'success');
+                            await this.checkPermissions();
+                            return;
+                        } else {
+                            this.log('❌ Permisos denegados via OneSignal', 'error');
+                        }
+                    } else {
+                        this.log('⚠️ OneSignal no disponible, usando API nativa...', 'warn');
+                    }
+                    
+                    // Fallback a API nativa de navegador
+                    if ('Notification' in window) {
+                        const permission = await Notification.requestPermission();
+                        this.log(`📋 Resultado API nativa: ${permission}`, permission === 'granted' ? 'success' : 'error');
+                        await this.checkPermissions();
+                        
+                        if (permission === 'granted') {
+                            this.log('✅ ¡Permisos concedidos! Ya puedes recibir notificaciones', 'success');
+                        } else if (permission === 'denied') {
+                            this.log('❌ Permisos denegados. Puedes habilitarlos en configuración del navegador', 'error');
+                        } else {
+                            this.log('⏸️ Solicitud de permisos cancelada', 'warn');
+                        }
+                    } else {
+                        this.log('❌ Tu navegador no soporta notificaciones', 'error');
+                    }
+                    
+                } catch (error) {
+                    this.log(`❌ Error solicitando permisos: ${error.message}`, 'error');
+                }
+            }
+
+            async testNotification() {
+                try {
+                    this.log('Enviando notificación de prueba...');
+                    
+                    if (window.oneSignalManager) {
+                        await window.oneSignalManager.sendMindfulnessAlert('🧪 Notificación de prueba desde OneSignal');
+                        this.log('Notificación enviada via OneSignal', 'success');
+                    } else {
+                        this.log('OneSignalManager no disponible', 'error');
+                    }
+                } catch (error) {
+                    this.log(`Error enviando notificación: ${error.message}`, 'error');
+                }
+            }
+
+            testLocalNotification() {
+                try {
+                    this.log('Enviando notificación local...');
+                    
+                    if (Notification.permission === 'granted') {
+                        const notification = new Notification('Camino Medio - Prueba', {
+                            body: '🧪 Esta es una notificación de prueba local',
+                            icon: '../assets/img/logocompleto.png',
+                            badge: '../assets/img/logopeque.png',
+                            tag: 'test-notification'
+                        });
+
+                        notification.onclick = () => {
+                            this.log('Notificación clickeada', 'info');
+                            notification.close();
+                        };
+
+                        setTimeout(() => notification.close(), 5000);
+                        this.log('Notificación local enviada', 'success');
+                    } else {
+                        this.log('Permisos no concedidos para notificaciones locales', 'error');
+                    }
+                } catch (error) {
+                    this.log(`Error con notificación local: ${error.message}`, 'error');
+                }
+            }
+
+            clearConsole() {
+                this.console.innerHTML = '<div class="text-info">[INIT] Consola limpiada...</div>';
+            }
+
+            async debugConfiguration() {
+                this.log('🔍 === DEBUG CONFIGURACIÓN ===', 'info');
+                
+                // Verificar configuración simple
+                this.log(`window.ONESIGNAL_CONFIG existe: ${!!window.ONESIGNAL_CONFIG}`, 'info');
+                if (window.ONESIGNAL_CONFIG) {
+                    this.log(`Simple Config App ID: ${window.ONESIGNAL_CONFIG.APP_ID}`, 'info');
+                }
+                
+                // Verificar envConfig
+                this.log(`window.envConfig existe: ${!!window.envConfig}`, 'info');
+                
+                if (window.envConfig) {
+                    this.log(`envConfig.isReady: ${window.envConfig.isReady}`, 'info');
+                    this.log(`envConfig.isConfigured(): ${window.envConfig.isConfigured()}`, 'info');
+                    this.log(`App ID: ${window.envConfig.get('ONESIGNAL_APP_ID')}`, 'info');
+                    this.log(`Safari Web ID: ${window.envConfig.get('ONESIGNAL_SAFARI_WEB_ID')}`, 'info');
+                    this.log(`Config object:`, 'info');
+                    this.log(JSON.stringify(window.envConfig.config, null, 2), 'info');
+                }
+                
+                // Verificar OneSignal
+                this.log(`window.OneSignal existe: ${!!window.OneSignal}`, 'info');
+                this.log(`window.OneSignalManager existe: ${!!window.OneSignalManager}`, 'info');
+                this.log(`window.oneSignalManager existe: ${!!window.oneSignalManager}`, 'info');
+                
+                if (window.oneSignalManager) {
+                    this.log(`oneSignalManager.isInitialized: ${window.oneSignalManager.isInitialized}`, 'info');
+                    this.log(`oneSignalManager.config appId: ${window.oneSignalManager.config?.appId || 'undefined'}`, 'info');
+                    this.log(`oneSignalManager.isSubscribed: ${window.oneSignalManager.isSubscribed}`, 'info');
+                    this.log(`oneSignalManager.playerId: ${window.oneSignalManager.playerId || 'null'}`, 'info');
+                }
+                
+                // Verificar función de configuración
+                if (window.getOneSignalConfig) {
+                    this.log('🔧 Probando getOneSignalConfig()...', 'info');
+                    try {
+                        const config = window.getOneSignalConfig();
+                        this.log(`getOneSignalConfig() retorna App ID: ${config.appId}`, 'info');
+                    } catch (error) {
+                        this.log(`Error en getOneSignalConfig(): ${error.message}`, 'error');
+                    }
+                }
+                
+                this.log(`Notification.permission: ${Notification.permission}`, 'info');
+                this.log(`window.location.protocol: ${window.location.protocol}`, 'info');
+                this.log(`window.location.hostname: ${window.location.hostname}`, 'info');
+                
+                // Intentar reinicializar configuración
+                if (window.envConfig && !window.envConfig.isReady) {
+                    this.log('🔄 Configuración no lista, intentando reinicializar...', 'warn');
+                    await window.envConfig.init();
+                    this.log(`🔄 Después de reinicializar - isReady: ${window.envConfig.isReady}`, 'info');
+                }
+                
+                this.log('🔍 === FIN DEBUG ===', 'info');
+            }
+
+            async debugServiceWorkers() {
+                this.log('🔧 === DEBUG SERVICE WORKERS ===', 'info');
+                
+                // Verificar service workers disponibles
+                if ('serviceWorker' in navigator) {
+                    this.log('✅ Service Worker API disponible', 'info');
+                    
+                    try {
+                        const registrations = await navigator.serviceWorker.getRegistrations();
+                        this.log(`📋 Registros de SW encontrados: ${registrations.length}`, 'info');
+                        
+                        for (let i = 0; i < registrations.length; i++) {
+                            const reg = registrations[i];
+                            this.log(`SW ${i + 1}: ${reg.scope}`, 'info');
+                            this.log(`  - Active: ${reg.active ? reg.active.scriptURL : 'none'}`, 'info');
+                            this.log(`  - Installing: ${reg.installing ? reg.installing.scriptURL : 'none'}`, 'info');
+                            this.log(`  - Waiting: ${reg.waiting ? reg.waiting.scriptURL : 'none'}`, 'info');
+                        }
+                    } catch (error) {
+                        this.log(`❌ Error obteniendo SW: ${error.message}`, 'error');
+                    }
+                } else {
+                    this.log('❌ Service Worker API no disponible', 'error');
+                }
+                
+                // Verificar rutas de service workers
+                const swPaths = [
+                    '/app/OneSignalSDKWorker.js',
+                    '/app/OneSignalSDKUpdaterWorker.js'
+                ];
+                
+                for (const path of swPaths) {
+                    try {
+                        const response = await fetch(path);
+                        if (response.ok) {
+                            const content = await response.text();
+                            this.log(`✅ ${path} accesible (${content.length} chars)`, 'success');
+                            this.log(`📝 Contenido: ${content.substring(0, 80)}...`, 'info');
+                        } else {
+                            this.log(`❌ ${path} no accesible (${response.status})`, 'error');
+                        }
+                    } catch (error) {
+                        this.log(`❌ Error verificando ${path}: ${error.message}`, 'error');
+                    }
+                }
+                
+                this.log('🔧 === FIN DEBUG SERVICE WORKERS ===', 'info');
+            }
+        }
+
+        // Inicializar cuando la página esté lista
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('🚀 Página cargada, inicializando OneSignal...');
+            
+            // Crear instancia global de OneSignalManager si no existe
+            const initOneSignal = () => {
+                if (window.OneSignalManager && window.envConfig && window.envConfig.isConfigured()) {
+                    console.log('✅ Inicializando OneSignalManager...');
+                    window.oneSignalManager = new OneSignalManager();
+                } else {
+                    console.log('⏳ Esperando OneSignal y configuración...');
+                    setTimeout(initOneSignal, 500);
+                }
+            };
+            
+            // Iniciar después de un pequeño delay para asegurar que todo esté cargado
+            setTimeout(initOneSignal, 1000);
+            
+            // Inicializar el tester inmediatamente
+            window.tester = new OneSignalTester();
+        });
+    </script>
+</body>
+</html>
