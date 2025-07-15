@@ -1,14 +1,36 @@
-/* Alertas de Mindfulness - Estilos personalizados */
+/* Alertas de Mindfulness - Estilos personalizados mejorados */
 
 body {
     font-family: 'Varela Round', sans-serif;
     background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
     min-height: 100vh;
+    color: #f8f9fa; /* Texto principal más claro */
+}
+
+/* Asegurar legibilidad del texto */
+* {
+    color: inherit;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    color: #ffffff !important;
+}
+
+p, span, div {
+    color: #e9ecef; /* Texto secundario claro */
+}
+
+.text-muted {
+    color: #adb5bd !important; /* Texto muted más legible */
 }
 
 .navbar {
     backdrop-filter: blur(10px);
     background-color: rgba(0, 0, 0, 0.9) !important;
+}
+
+.navbar-brand, .nav-link {
+    color: #ffffff !important;
 }
 
 /* Status Indicator */
@@ -33,31 +55,51 @@ body {
     border-radius: 15px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
     backdrop-filter: blur(10px);
-    background-color: rgba(33, 37, 41, 0.9) !important;
+    background-color: rgba(33, 37, 41, 0.95) !important; /* Fondo más opaco para mejor contraste */
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .card-header {
-    background-color: rgba(0, 0, 0, 0.2);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    background-color: rgba(0, 0, 0, 0.3);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 15px 15px 0 0 !important;
+    color: #ffffff !important;
+}
+
+.card-title {
+    color: #ffffff !important;
+}
+
+.card-text {
+    color: #e9ecef !important;
 }
 
 /* Form Controls */
 .form-control, .form-select {
-    background-color: rgba(33, 37, 41, 0.8);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: #fff;
+    background-color: rgba(33, 37, 41, 0.9); /* Fondo más opaco */
+    border: 1px solid rgba(255, 255, 255, 0.3); /* Borde más visible */
+    color: #ffffff !important; /* Texto más claro */
 }
 
 .form-control:focus, .form-select:focus {
-    background-color: rgba(33, 37, 41, 0.9);
+    background-color: rgba(33, 37, 41, 0.95);
     border-color: #0d6efd;
     box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
-    color: #fff;
+    color: #ffffff !important;
 }
 
 .form-control::placeholder {
-    color: rgba(255, 255, 255, 0.5);
+    color: rgba(255, 255, 255, 0.7) !important; /* Placeholder más visible */
+}
+
+.form-label {
+    color: #f8f9fa !important;
+    font-weight: 500;
+}
+
+.form-select option {
+    background-color: #212529;
+    color: #ffffff;
 }
 
 /* Range Slider */
@@ -103,6 +145,7 @@ body {
 .btn {
     border-radius: 10px;
     transition: all 0.3s ease;
+    font-weight: 500;
 }
 
 .btn:hover {
@@ -113,20 +156,36 @@ body {
 .btn-primary {
     background: linear-gradient(45deg, #0d6efd, #6610f2);
     border: none;
+    color: #ffffff !important;
 }
 
 .btn-success {
     background: linear-gradient(45deg, #28a745, #20c997);
     border: none;
+    color: #ffffff !important;
 }
 
 .btn-outline-light {
-    border-color: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.5); /* Borde más visible */
+    color: #ffffff !important;
 }
 
 .btn-outline-light:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.5);
+    background-color: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.7);
+    color: #ffffff !important;
+}
+
+.btn-danger {
+    color: #ffffff !important;
+}
+
+.btn-warning {
+    color: #000000 !important; /* Texto oscuro en botón amarillo */
+}
+
+.btn-info {
+    color: #ffffff !important;
 }
 
 /* Statistics */
@@ -134,6 +193,11 @@ body {
     font-size: 2.5rem;
     font-weight: bold;
     margin-bottom: 0.5rem;
+    color: #ffffff !important;
+}
+
+.stat-item p {
+    color: #adb5bd !important;
 }
 
 /* Animations */
@@ -149,14 +213,69 @@ body {
 
 /* Toast Notifications */
 .toast {
-    background-color: rgba(33, 37, 41, 0.95);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    background-color: rgba(33, 37, 41, 0.98);
+    border: 1px solid rgba(255, 255, 255, 0.3);
     backdrop-filter: blur(10px);
+    color: #ffffff !important;
 }
 
 .toast-header {
-    background-color: rgba(0, 0, 0, 0.1);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    background-color: rgba(0, 0, 0, 0.2);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    color: #ffffff !important;
+}
+
+.toast-body {
+    color: #e9ecef !important;
+}
+
+/* Lista y elementos de texto */
+.list-group-item {
+    background-color: rgba(33, 37, 41, 0.9);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: #e9ecef !important;
+}
+
+.list-group-item:hover {
+    background-color: rgba(33, 37, 41, 0.95);
+}
+
+/* Badges */
+.badge {
+    color: #ffffff !important;
+}
+
+.badge.bg-secondary {
+    background-color: #6c757d !important;
+}
+
+/* Alertas Bootstrap */
+.alert {
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.alert-info {
+    background-color: rgba(13, 110, 253, 0.1);
+    border-color: rgba(13, 110, 253, 0.3);
+    color: #b6d7ff !important;
+}
+
+.alert-success {
+    background-color: rgba(40, 167, 69, 0.1);
+    border-color: rgba(40, 167, 69, 0.3);
+    color: #b8e6c1 !important;
+}
+
+.alert-warning {
+    background-color: rgba(255, 193, 7, 0.1);
+    border-color: rgba(255, 193, 7, 0.3);
+    color: #ffeaa7 !important;
+}
+
+.alert-danger {
+    background-color: rgba(220, 53, 69, 0.1);
+    border-color: rgba(220, 53, 69, 0.3);
+    color: #f8b2b2 !important;
 }
 
 /* Mobile Responsiveness */
@@ -240,4 +359,57 @@ body {
     .form-control, .form-select {
         border: 2px solid #fff;
     }
+    
+    /* Forzar colores de alto contraste */
+    body {
+        background: #000000 !important;
+        color: #ffffff !important;
+    }
+    
+    .card {
+        background-color: #000000 !important;
+        border: 2px solid #ffffff !important;
+    }
+    
+    .form-control, .form-select {
+        background-color: #000000 !important;
+        color: #ffffff !important;
+        border: 2px solid #ffffff !important;
+    }
+}
+
+/* Mejoras adicionales de accesibilidad */
+.visually-hidden {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+}
+
+/* Focus visible para mejor navegación por teclado */
+.btn:focus-visible,
+.form-control:focus-visible,
+.form-select:focus-visible {
+    outline: 2px solid #ffffff;
+    outline-offset: 2px;
+}
+
+/* Mejorar contraste en elementos interactivos */
+.form-check-input {
+    background-color: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.5);
+}
+
+.form-check-input:checked {
+    background-color: #28a745;
+    border-color: #28a745;
+}
+
+.form-check-label {
+    color: #f8f9fa !important;
 }

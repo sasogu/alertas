@@ -25,7 +25,16 @@ class EnvConfig {
     async loadFromEndpoint() {
         try {
             console.log('🔌 Intentando cargar configuración desde servidor...');
-            const response = await fetch('/api/config');
+            
+            // Primero intentar el endpoint dinámico
+            let response = await fetch('/api/config');
+            
+            // Si falla, intentar el archivo JSON estático
+            if (!response.ok) {
+                console.log('🔌 Intentando cargar desde archivo JSON estático...');
+                response = await fetch('/api/config.json');
+            }
+            
             if (response.ok) {
                 this.config = await response.json();
                 this.config.server_loaded = true;
@@ -41,11 +50,16 @@ class EnvConfig {
 
     loadFromLocalConfig() {
         // Configuración para https://alertas.caminomedio.org/
-        // ⚠️ En producción esto vendría del servidor backend
+        // 🎯 Para servidor estático: usar meta tags o credenciales hardcodeadas
+        
+        // Leer desde meta tags del HTML
+        const envAppId = document.querySelector('meta[name="onesignal-app-id"]')?.content;
+        const envSafariId = document.querySelector('meta[name="onesignal-safari-id"]')?.content;
+        
         this.config = {
-            // 🎯 CONFIGURAR PARA NUEVO DOMINIO alertas.caminomedio.org
-            ONESIGNAL_APP_ID: 'NUEVA_APP_ID_PARA_ALERTAS_SUBDOMINIO', 
-            ONESIGNAL_SAFARI_WEB_ID: 'web.onesignal.auto.NUEVO_SAFARI_ID',
+            // Usar meta tags si están disponibles, sino usar credenciales hardcodeadas
+            ONESIGNAL_APP_ID: envAppId || '75f7bf03-ba86-4059-99cc-797fe53a147d', 
+            ONESIGNAL_SAFARI_WEB_ID: envSafariId || 'web.onesignal.auto.3f550615-46c0-4fa5-9ee8-42953ece3d19',
             server_loaded: false,
             domain: 'alertas.caminomedio.org',
             https_required: true

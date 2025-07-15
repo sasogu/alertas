@@ -1,253 +1,311 @@
 <!DOCTYPE html>
 <html lang="es">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-    <meta name="description" content="Alertas de mindfulness - Recordatorios sonoros para práctica consciente" />
-    <title>Alertas de Mindfulness - Camino Medio</title>
-    <link rel="icon" type="image/x-icon" href="../assets/favicon.ico" />
-    <link rel="apple-touch-icon" href="../assets/img/apple-touch-icon.png" />
-    
-    <!-- OneSignal Push Notifications -->
-    <script src="https://cdn.onesignal.com/sdks/OneSignalSDK.js" async=""></script>
-    
-    <!-- Font Awesome icons -->
-    <script defer src="https://use.fontawesome.com/releases/v6.5.2/js/all.js"></script>
-    
-    <!-- Google fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css?family=Varela+Round" rel="stylesheet" />
-    
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    
-    <!-- Custom CSS -->
-    <link href="css/alertas.css" rel="stylesheet" />
-    <link rel="manifest" href="/manifest.json">
-</head>
 
-<body class="bg-dark text-white">
-    <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-black fixed-top">
-        <div class="container">
-            <a class="navbar-brand" href="../index.html">
-                <img src="../assets/img/logoblanco.png" alt="Camino Medio" height="40">
-            </a>
-            <h4 class="text-white mb-0">Alertas de Mindfulness</h4>
-        </div>
-    </nav>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+        <meta name="description" content="Shoken - Recordatorios sonoros para práctica consciente" />
 
-    <!-- Main Content -->
-    <main class="container mt-5 pt-5">
-        <div class="row justify-content-center">
-            <div class="col-lg-8">
-                <!-- Status Card -->
-                <div class="card bg-dark border-light mb-4">
-                    <div class="card-body text-center">
-                        <div id="status-indicator" class="status-inactive mb-3">
-                            <i class="fas fa-bell-slash fa-3x"></i>
+        <!-- OneSignal Configuration -->
+        <meta name="onesignal-app-id" content="75f7bf03-ba86-4059-99cc-797fe53a147d" />
+        <meta name="onesignal-safari-id" content="web.onesignal.auto.3f550615-46c0-4fa5-9ee8-42953ece3d19" />
+
+        <!-- PWA Meta Tags -->
+        <meta name="theme-color" content="#2d5a4f">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+        <meta name="apple-mobile-web-app-title" content="Alertas">
+        <meta name="msapplication-TileColor" content="#2d5a4f">
+        <meta name="msapplication-TileImage" content="/assets/icons/192x192.png">
+
+        <title>Alertas de Mindfulness - Camino Medio</title>
+        <link rel="icon" type="image/x-icon" href="assets/favicon.ico" />
+        <link rel="apple-touch-icon" href="assets/icons/192x192.png" />
+        <link rel="apple-touch-icon" sizes="192x192" href="assets/icons/192x192.png" />
+        <link rel="apple-touch-icon" sizes="512x512" href="assets/icons/512x512.png" />
+
+        <!-- OneSignal Push Notifications -->
+        <script src="https://cdn.onesignal.com/sdks/OneSignalSDK.js" async=""></script>
+
+        <!-- Font Awesome icons -->
+        <script defer src="https://use.fontawesome.com/releases/v6.5.2/js/all.js"></script>
+
+        <!-- Google fonts -->
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css?family=Varela+Round" rel="stylesheet" />
+
+        <!-- Bootstrap CSS -->
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+        <!-- Custom CSS -->
+        <link href="css/alertas.css" rel="stylesheet" />
+        <link rel="manifest" href="/manifest.json">
+    </head>
+
+    <body class="bg-dark text-white">
+        <!-- Navigation -->
+        <nav class="navbar navbar-expand-lg navbar-dark bg-black fixed-top">
+            <div class="container">
+                <a class="navbar-brand" href="../index.html">
+                    <img src="../assets/img/logoblanco.png" alt="Camino Medio" height="40">
+                </a>
+                <h4 class="text-white mb-0">Alertas de Mindfulness</h4>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="container mt-5 pt-5">
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <!-- Status Card -->
+                    <div class="card bg-dark border-light mb-4">
+                        <div class="card-body text-center">
+                            <div id="status-indicator" class="status-inactive mb-3">
+                                <i class="fas fa-bell-slash fa-3x"></i>
+                            </div>
+                            <h3 id="status-text">Alertas Desactivadas</h3>
+                            <p id="next-alert" class="text-muted"></p>
+                            <button id="toggle-btn" class="btn btn-primary btn-lg">
+                                <i class="fas fa-play me-2"></i>Activar Alertas
+                            </button>
                         </div>
-                        <h3 id="status-text">Alertas Desactivadas</h3>
-                        <p id="next-alert" class="text-muted"></p>
-                        <button id="toggle-btn" class="btn btn-primary btn-lg">
-                            <i class="fas fa-play me-2"></i>Activar Alertas
-                        </button>
                     </div>
-                </div>
 
-                <!-- Configuration Card -->
-                <div class="card bg-dark border-light mb-4">
-                    <div class="card-header">
-                        <h5 class="mb-0"><i class="fas fa-cog me-2"></i>Configuración</h5>
-                    </div>
-                    <div class="card-body">
-                        <!-- Interval Settings -->
-                        <div class="mb-4">
-                            <label class="form-label">Intervalo de tiempo</label>
-                            <div class="row g-3">
-                                <div class="col-md-4">
-                                    <label for="interval-minutes" class="form-label small">Minutos</label>
-                                    <input type="number" class="form-control" id="interval-minutes" min="0" max="59" value="5">
-                                </div>
-                                <div class="col-md-4">
-                                    <label for="interval-seconds" class="form-label small">Segundos</label>
-                                    <input type="number" class="form-control" id="interval-seconds" min="0" max="59" value="0">
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="d-flex flex-column h-100">
-                                        <label class="form-label small">Presets</label>
-                                        <select class="form-select" id="preset-intervals">
-                                            <option value="">Personalizado</option>
-                                            <option value="30">30 segundos</option>
-                                            <option value="60">1 minuto</option>
-                                            <option value="300">5 minutos</option>
-                                            <option value="600">10 minutos</option>
-                                            <option value="900">15 minutos</option>
-                                            <option value="1800">30 minutos</option>
-                                            <option value="3600">1 hora</option>
-                                        </select>
+                    <!-- Configuration Card -->
+                    <div class="card bg-dark border-light mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="fas fa-cog me-2"></i>Configuración</h5>
+                        </div>
+                        <div class="card-body">
+                            <!-- Interval Settings -->
+                            <div class="mb-4">
+                                <label class="form-label">Intervalo de tiempo</label>
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <label for="interval-minutes" class="form-label small">Minutos</label>
+                                        <input type="number" class="form-control" id="interval-minutes" min="0" max="59"
+                                            value="5">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="interval-seconds" class="form-label small">Segundos</label>
+                                        <input type="number" class="form-control" id="interval-seconds" min="0" max="59"
+                                            value="0">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="d-flex flex-column h-100">
+                                            <label class="form-label small">Presets</label>
+                                            <select class="form-select" id="preset-intervals">
+                                                <option value="">Personalizado</option>
+                                                <option value="30">30 segundos</option>
+                                                <option value="60">1 minuto</option>
+                                                <option value="300">5 minutos</option>
+                                                <option value="600">10 minutos</option>
+                                                <option value="900">15 minutos</option>
+                                                <option value="1800">30 minutos</option>
+                                                <option value="3600">1 hora</option>
+                                            </select>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <!-- Sound Settings -->
-                        <div class="mb-4">
-                            <label class="form-label">Sonido de alerta</label>
-                            <div class="row g-3">
-                                <div class="col-md-8">
-                                    <select class="form-select" id="sound-select">
-                                        <option value="bell1">Campana Tibetana</option>
-                                        <option value="bell2">Gong Suave</option>
-                                        <option value="bell3">Cuenco Cantante</option>
-                                        <option value="chime">Carillón</option>
-                                        <option value="om">Om Mantra</option>
+                            <!-- Sound Settings -->
+                            <div class="mb-4">
+                                <label class="form-label">Sonido de alerta</label>
+                                <div class="row g-3">
+                                    <div class="col-md-8">
+                                        <select class="form-select" id="sound-select">
+                                            <option value="bell1">Campana Tibetana</option>
+                                            <option value="bell2">Gong Suave</option>
+                                            <option value="bell3">Cuenco Cantante</option>
+                                            <option value="chime">Carillón</option>
+                                            <option value="om">Om Mantra</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <button type="button" class="btn btn-outline-light w-100" id="test-sound">
+                                            <i class="fas fa-volume-up me-2"></i>Probar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Volume Control -->
+                            <div class="mb-4">
+                                <label for="volume-control" class="form-label">Volumen</label>
+                                <input type="range" class="form-range" id="volume-control" min="0" max="100" value="70">
+                                <div class="d-flex justify-content-between small text-muted">
+                                    <span>0%</span>
+                                    <span id="volume-display">70%</span>
+                                    <span>100%</span>
+                                </div>
+                            </div>
+
+                            <!-- Vibration Settings -->
+                            <div class="mb-4">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="vibration-enabled">
+                                    <label class="form-check-label" for="vibration-enabled">
+                                        <i class="fas fa-mobile-alt me-2"></i>Activar vibración (móviles)
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Push Notifications Settings -->
+                            <div class="mb-4">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="push-notifications-enabled">
+                                    <label class="form-check-label" for="push-notifications-enabled">
+                                        <i class="fas fa-bell me-2"></i>Notificaciones Push (funciona con teléfono
+                                        inactivo)
+                                    </label>
+                                </div>
+                                <div class="mt-2">
+                                    <small class="text-muted">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Las notificaciones push permiten recibir alertas aunque la app esté cerrada
+                                    </small>
+                                </div>
+                                <div id="push-status" class="mt-2" style="display: none;">
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-check me-1"></i>Notificaciones habilitadas
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Auto-stop Settings -->
+                            <div class="mb-4">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="auto-stop-enabled">
+                                    <label class="form-check-label" for="auto-stop-enabled">
+                                        Parar automáticamente después de:
+                                    </label>
+                                </div>
+                                <div class="mt-2">
+                                    <select class="form-select" id="auto-stop-duration" disabled>
+                                        <option value="10">10 alertas</option>
+                                        <option value="20">20 alertas</option>
+                                        <option value="30">30 alertas</option>
+                                        <option value="60">1 hora</option>
+                                        <option value="120">2 horas</option>
+                                        <option value="180">3 horas</option>
                                     </select>
                                 </div>
+                            </div>
+
+                            <div class="text-center">
+                                <button type="button" class="btn btn-success" id="save-config">
+                                    <i class="fas fa-save me-2"></i>Guardar Configuración
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Statistics Card -->
+                    <div class="card bg-dark border-light">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Estadísticas de Hoy</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row text-center">
                                 <div class="col-md-4">
-                                    <button type="button" class="btn btn-outline-light w-100" id="test-sound">
-                                        <i class="fas fa-volume-up me-2"></i>Probar
-                                    </button>
+                                    <div class="stat-item">
+                                        <h3 id="alerts-count" class="text-primary">0</h3>
+                                        <small class="text-muted">Alertas Recibidas</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="stat-item">
+                                        <h3 id="session-time" class="text-success">0m</h3>
+                                        <small class="text-muted">Tiempo de Sesión</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="stat-item">
+                                        <h3 id="mindful-moments" class="text-warning">0</h3>
+                                        <small class="text-muted">Momentos Conscientes</small>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-
-                        <!-- Volume Control -->
-                        <div class="mb-4">
-                            <label for="volume-control" class="form-label">Volumen</label>
-                            <input type="range" class="form-range" id="volume-control" min="0" max="100" value="70">
-                            <div class="d-flex justify-content-between small text-muted">
-                                <span>0%</span>
-                                <span id="volume-display">70%</span>
-                                <span>100%</span>
+                            <div class="text-center mt-3">
+                                <button type="button" class="btn btn-outline-light btn-sm" id="reset-stats">
+                                    <i class="fas fa-redo me-2"></i>Reiniciar Estadísticas
+                                </button>
                             </div>
-                        </div>
-
-                        <!-- Vibration Settings -->
-                        <div class="mb-4">
-                            <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" id="vibration-enabled">
-                                <label class="form-check-label" for="vibration-enabled">
-                                    <i class="fas fa-mobile-alt me-2"></i>Activar vibración (móviles)
-                                </label>
-                            </div>
-                        </div>
-
-                        <!-- Push Notifications Settings -->
-                        <div class="mb-4">
-                            <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" id="push-notifications-enabled">
-                                <label class="form-check-label" for="push-notifications-enabled">
-                                    <i class="fas fa-bell me-2"></i>Notificaciones Push (funciona con teléfono inactivo)
-                                </label>
-                            </div>
-                            <div class="mt-2">
-                                <small class="text-muted">
-                                    <i class="fas fa-info-circle me-1"></i>
-                                    Las notificaciones push permiten recibir alertas aunque la app esté cerrada
-                                </small>
-                            </div>
-                            <div id="push-status" class="mt-2" style="display: none;">
-                                <span class="badge bg-success">
-                                    <i class="fas fa-check me-1"></i>Notificaciones habilitadas
-                                </span>
-                            </div>
-                        </div>
-
-                        <!-- Auto-stop Settings -->
-                        <div class="mb-4">
-                            <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" id="auto-stop-enabled">
-                                <label class="form-check-label" for="auto-stop-enabled">
-                                    Parar automáticamente después de:
-                                </label>
-                            </div>
-                            <div class="mt-2">
-                                <select class="form-select" id="auto-stop-duration" disabled>
-                                    <option value="10">10 alertas</option>
-                                    <option value="20">20 alertas</option>
-                                    <option value="30">30 alertas</option>
-                                    <option value="60">1 hora</option>
-                                    <option value="120">2 horas</option>
-                                    <option value="180">3 horas</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="text-center">
-                            <button type="button" class="btn btn-success" id="save-config">
-                                <i class="fas fa-save me-2"></i>Guardar Configuración
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Statistics Card -->
-                <div class="card bg-dark border-light">
-                    <div class="card-header">
-                        <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Estadísticas de Hoy</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row text-center">
-                            <div class="col-md-4">
-                                <div class="stat-item">
-                                    <h3 id="alerts-count" class="text-primary">0</h3>
-                                    <small class="text-muted">Alertas Recibidas</small>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="stat-item">
-                                    <h3 id="session-time" class="text-success">0m</h3>
-                                    <small class="text-muted">Tiempo de Sesión</small>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="stat-item">
-                                    <h3 id="mindful-moments" class="text-warning">0</h3>
-                                    <small class="text-muted">Momentos Conscientes</small>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="text-center mt-3">
-                            <button type="button" class="btn btn-outline-light btn-sm" id="reset-stats">
-                                <i class="fas fa-redo me-2"></i>Reiniciar Estadísticas
-                            </button>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </main>
+        </main>
 
-    <!-- Footer -->
-    <footer class="text-center py-4 mt-5">
-        <div class="container">
-            <p class="text-muted mb-0">
-                <i class="fas fa-om me-2"></i>
-                Practica la atención plena momento a momento
-            </p>
-            <a href="../index.html" class="btn btn-outline-light btn-sm mt-2">
-                <i class="fas fa-arrow-left me-2"></i>Volver al Inicio
-            </a>
-        </div>
-    </footer>
+        <!-- Footer -->
+        <footer class="text-center py-4 mt-5">
+            <div class="container">
+                <p class="text-muted mb-0">
+                    <i class="fas fa-om me-2"></i>
+                    Practica la atención plena momento a momento
+                </p>
+                <a href="../index.html" class="btn btn-outline-light btn-sm mt-2">
+                    <i class="fas fa-arrow-left me-2"></i>Volver al Inicio
+                </a>
+            </div>
+        </footer>
 
-    <!-- Audio Elements -->
-    <audio id="alert-audio" preload="auto">
-        <source id="audio-source" src="sounds/bell1.mp3" type="audio/mpeg">
-    </audio>
+        <!-- Audio Elements -->
+        <audio id="alert-audio" preload="auto">
+            <source id="audio-source" src="sounds/bell1.mp3" type="audio/mpeg">
+        </audio>
 
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    
-    <!-- Configuración de entorno -->
-    <script src="js/env-config.js"></script>
-    
-    <!-- OneSignal Configuration -->
-    <script src="js/onesignal-config.js"></script>
-    
-    <!-- Custom JS -->
-    <script src="js/alertas.js"></script>
-</body>
+        <!-- Bootstrap JS -->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+        <!-- Configuración de entorno -->
+        <script src="js/env-config.js"></script>
+
+        <!-- OneSignal Configuration -->
+        <script src="js/onesignal-config.js"></script>
+
+        <!-- Custom JS -->
+        <script src="js/alertas.js"></script>
+
+        <!-- PWA Service Worker -->
+        <script>
+            // Registrar Service Worker para funcionalidad PWA
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                    navigator.serviceWorker.register('/sw.js')
+                        .then(registration => {
+                            console.log('✅ PWA Service Worker registrado:', registration.scope);
+                            
+                            // Verificar actualizaciones
+                            registration.addEventListener('updatefound', () => {
+                                console.log('🔄 Nueva versión de la PWA disponible');
+                                const newWorker = registration.installing;
+                                newWorker.addEventListener('statechange', () => {
+                                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                        // Mostrar notificación de actualización
+                                        if (confirm('Nueva versión disponible. ¿Recargar la aplicación?')) {
+                                            newWorker.postMessage({ type: 'SKIP_WAITING' });
+                                            window.location.reload();
+                                        }
+                                    }
+                                });
+                            });
+                        })
+                        .catch(error => {
+                            console.warn('⚠️ Error registrando PWA Service Worker:', error);
+                        });
+                });
+                
+                // Escuchar cambios en el Service Worker
+                navigator.serviceWorker.addEventListener('controllerchange', () => {
+                    console.log('🔄 PWA Service Worker actualizado');
+                });
+            } else {
+                console.warn('⚠️ Service Workers no soportados en este navegador');
+            }
+        </script>
+    </body>
+
 </html>

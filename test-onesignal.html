@@ -3,6 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- OneSignal Configuration -->
+    <meta name="onesignal-app-id" content="75f7bf03-ba86-4059-99cc-797fe53a147d" />
+    <meta name="onesignal-safari-id" content="web.onesignal.auto.3f550615-46c0-4fa5-9ee8-42953ece3d19" />
+    
     <title>Prueba OneSignal - Camino Medio</title>
     
     <!-- Bootstrap CSS -->
@@ -16,15 +21,17 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #333;
         }
         
         .test-container {
-            background: rgba(255, 255, 255, 0.95);
+            background: rgba(255, 255, 255, 0.98); /* Más opaco para mejor contraste */
             border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
             backdrop-filter: blur(10px);
             margin: 2rem auto;
             max-width: 800px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
         }
         
         .status-card {
@@ -35,21 +42,34 @@
             padding: 1.5rem;
             border-left: 5px solid #dee2e6;
             transition: all 0.3s ease;
+            color: #333; /* Texto más oscuro para mejor contraste */
+        }
+        
+        .status-card h5 {
+            color: #2c3e50 !important; /* Títulos más oscuros */
+            font-weight: 600;
+        }
+        
+        .status-card p {
+            color: #495057 !important; /* Texto del contenido más legible */
         }
         
         .status-card.success {
             border-left-color: #28a745;
             background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            color: #155724; /* Texto verde oscuro para mejor contraste */
         }
         
         .status-card.error {
             border-left-color: #dc3545;
             background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+            color: #721c24; /* Texto rojo oscuro para mejor contraste */
         }
         
         .status-card.warning {
             border-left-color: #ffc107;
             background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+            color: #856404; /* Texto amarillo oscuro para mejor contraste */
         }
         
         .test-button {
@@ -57,26 +77,29 @@
             border: none;
             border-radius: 50px;
             padding: 12px 30px;
-            color: white;
+            color: white !important; /* Forzar texto blanco */
             font-weight: 600;
             transition: all 0.3s ease;
             box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+            text-decoration: none;
         }
         
         .test-button:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 25px rgba(40, 167, 69, 0.4);
+            color: white !important; /* Mantener texto blanco en hover */
         }
         
         .test-button:disabled {
             background: #6c757d;
             cursor: not-allowed;
             transform: none;
+            color: white !important;
         }
         
         .console-output {
             background: #1a1a1a;
-            color: #00ff00;
+            color: #00ff41; /* Verde más brillante para mejor legibilidad */
             border-radius: 10px;
             padding: 1rem;
             font-family: 'Courier New', monospace;
@@ -84,6 +107,7 @@
             max-height: 300px;
             overflow-y: auto;
             margin: 1rem 0;
+            border: 1px solid #333;
         }
         
         .zen-icon {
@@ -92,6 +116,61 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+        }
+        
+        /* Mejorar botones de Bootstrap */
+        .btn-outline-info {
+            color: #0dcaf0 !important;
+            border-color: #0dcaf0 !important;
+        }
+        
+        .btn-outline-info:hover {
+            background-color: #0dcaf0 !important;
+            border-color: #0dcaf0 !important;
+            color: white !important;
+        }
+        
+        /* Títulos principales */
+        h1, h2, h3, h4, h5, h6 {
+            color: #2c3e50 !important;
+        }
+        
+        .text-muted {
+            color: #6c757d !important;
+        }
+        
+        /* Información del usuario */
+        .user-info {
+            background: rgba(13, 110, 253, 0.1);
+            border: 1px solid rgba(13, 110, 253, 0.2);
+            border-radius: 10px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .user-info h5 {
+            color: #0d6efd !important;
+        }
+        
+        .user-info p {
+            color: #495057 !important;
+        }
+        
+        /* Instrucciones */
+        .instructions {
+            background: rgba(255, 193, 7, 0.1);
+            border: 1px solid rgba(255, 193, 7, 0.3);
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin: 2rem 0;
+        }
+        
+        .instructions h4 {
+            color: #b8860b !important;
+        }
+        
+        .instructions p, .instructions ul, .instructions li {
+            color: #495057 !important;
         }
     </style>
 </head>
